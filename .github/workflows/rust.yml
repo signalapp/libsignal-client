@@ -13,7 +13,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Install nightly rust
@@ -22,7 +22,7 @@ jobs:
         toolchain: nightly
         override: true
         profile: minimal
-        components: rustfmt, clippy
+        components: rustfmt, clippy, llvm-tools-preview
     - uses: actions/checkout@v2
     - name: Rustfmt check
       run: cargo fmt -- --check
@@ -32,3 +32,25 @@ jobs:
       run: cargo test --verbose
     - name: Clippy
       run: cargo clippy
+
+    - name: Install LLVM tools (for llvm-cov)
+      run: sudo apt-get install llvm
+
+    - name: Rerun tests for coverage
+      run: cargo test
+      env:
+        RUSTFLAGS: -Zinstrument-coverage
+        CARGO_TARGET_DIR: target-cov
+        LLVM_PROFILE_FILE: "${{ github.workspace }}/test.%p.profraw"
+
+    - name: Merge coverage data
+      run: $(rustc --print target-libdir)/../bin/llvm-profdata merge --sparse test.*.profraw -o test.profdata
+
+    - name: Generate coverage report
+      run: find target-cov/debug/deps -type f -perm -u+x ! -name '*.so' | sed '2,$ s/^/--object /' | xargs llvm-cov show --format=html --instr-profile test.profdata --output-dir coverage-report
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v2
+      with:
+        name: Rust Coverage
+        path: coverage-report

@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal;
 
@@ -38,10 +38,10 @@ public class SignalProtocolAddress {
 
   @Override
   public boolean equals(Object other) {
-    if (other == null)                       return false;
+    if (other == null) return false;
     if (!(other instanceof SignalProtocolAddress)) return false;
 
-    SignalProtocolAddress that = (SignalProtocolAddress)other;
+    SignalProtocolAddress that = (SignalProtocolAddress) other;
     return this.getName().equals(that.getName()) && this.getDeviceId() == that.getDeviceId();
   }
 

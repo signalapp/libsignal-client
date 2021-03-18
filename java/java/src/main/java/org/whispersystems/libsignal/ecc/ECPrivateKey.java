@@ -1,10 +1,10 @@
 /**
  * Copyright (C) 2013-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
-
 package org.whispersystems.libsignal.ecc;
+
 import org.signal.client.internal.Native;
 
 public class ECPrivateKey {
@@ -19,7 +19,7 @@ public class ECPrivateKey {
   }
 
   public ECPrivateKey(long nativeHandle) {
-    if(nativeHandle == 0) {
+    if (nativeHandle == 0) {
       throw new NullPointerException();
     }
     this.handle = nativeHandle;
@@ -27,7 +27,7 @@ public class ECPrivateKey {
 
   @Override
   protected void finalize() {
-     Native.ECPrivateKey_Destroy(this.handle);
+    Native.ECPrivateKey_Destroy(this.handle);
   }
 
   public byte[] serialize() {
@@ -35,7 +35,7 @@ public class ECPrivateKey {
   }
 
   public byte[] calculateSignature(byte[] message) {
-     return Native.ECPrivateKey_Sign(this.handle, message);
+    return Native.ECPrivateKey_Sign(this.handle, message);
   }
 
   public byte[] calculateAgreement(ECPublicKey other) {

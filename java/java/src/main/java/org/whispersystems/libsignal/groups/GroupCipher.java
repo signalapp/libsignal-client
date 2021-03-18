@@ -1,28 +1,25 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.groups;
 
 import org.signal.client.internal.Native;
 import org.whispersystems.libsignal.DuplicateMessageException;
-import org.whispersystems.libsignal.InvalidKeyIdException;
 import org.whispersystems.libsignal.InvalidMessageException;
 import org.whispersystems.libsignal.LegacyMessageException;
 import org.whispersystems.libsignal.NoSessionException;
 import org.whispersystems.libsignal.groups.state.SenderKeyStore;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-
 /**
  * The main entry point for Signal Protocol group encrypt/decrypt operations.
  *
- * Once a session has been established with {@link org.whispersystems.libsignal.groups.GroupSessionBuilder}
- * and a {@link org.whispersystems.libsignal.protocol.SenderKeyDistributionMessage} has been
- * distributed to each member of the group, this class can be used for all subsequent encrypt/decrypt
- * operations within that session (ie: until group membership changes).
+ * <p>Once a session has been established with {@link
+ * org.whispersystems.libsignal.groups.GroupSessionBuilder} and a {@link
+ * org.whispersystems.libsignal.protocol.SenderKeyDistributionMessage} has been distributed to each
+ * member of the group, this class can be used for all subsequent encrypt/decrypt operations within
+ * that session (ie: until group membership changes).
  *
  * @author Moxie Marlinspike
  */
@@ -35,7 +32,7 @@ public class GroupCipher {
 
   public GroupCipher(SenderKeyStore senderKeyStore, SenderKeyName senderKeyId) {
     this.senderKeyStore = senderKeyStore;
-    this.senderKeyId    = senderKeyId;
+    this.senderKeyId = senderKeyId;
   }
 
   /**
@@ -47,11 +44,12 @@ public class GroupCipher {
    */
   public byte[] encrypt(byte[] paddedPlaintext) throws NoSessionException {
     synchronized (LOCK) {
-    try {
-      return Native.GroupCipher_EncryptMessage(this.senderKeyId.nativeHandle(), paddedPlaintext, this.senderKeyStore, null);
-    } catch (IllegalStateException e) {
-      throw new NoSessionException(e);
-    }
+      try {
+        return Native.GroupCipher_EncryptMessage(
+            this.senderKeyId.nativeHandle(), paddedPlaintext, this.senderKeyStore, null);
+      } catch (IllegalStateException e) {
+        throw new NoSessionException(e);
+      }
     }
   }
 
@@ -65,13 +63,14 @@ public class GroupCipher {
    * @throws DuplicateMessageException
    */
   public byte[] decrypt(byte[] senderKeyMessageBytes)
-      throws LegacyMessageException, DuplicateMessageException, InvalidMessageException, NoSessionException
-  {
+      throws LegacyMessageException, DuplicateMessageException, InvalidMessageException,
+          NoSessionException {
     synchronized (LOCK) {
       try {
-        return Native.GroupCipher_DecryptMessage(this.senderKeyId.nativeHandle(), senderKeyMessageBytes, this.senderKeyStore, null);
-    } catch (IllegalStateException e) {
-      throw new NoSessionException(e);
+        return Native.GroupCipher_DecryptMessage(
+            this.senderKeyId.nativeHandle(), senderKeyMessageBytes, this.senderKeyStore, null);
+      } catch (IllegalStateException e) {
+        throw new NoSessionException(e);
       }
     }
   }

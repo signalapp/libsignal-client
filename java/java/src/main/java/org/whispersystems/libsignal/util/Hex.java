@@ -1,18 +1,16 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.util;
 
 import java.io.IOException;
 
-/**
- * Utility for generating hex dumps.
- */
+/** Utility for generating hex dumps. */
 public class Hex {
 
-  private final static char[] HEX_DIGITS = {
+  private static final char[] HEX_DIGITS = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
   };
 
@@ -31,7 +29,7 @@ public class Hex {
 
   public static String toStringCondensed(byte[] bytes) {
     StringBuffer buf = new StringBuffer();
-    for (int i=0;i<bytes.length;i++) {
+    for (int i = 0; i < bytes.length; i++) {
       appendHexCharWithPrefix(buf, bytes[i]);
     }
     return buf.toString();
@@ -39,7 +37,7 @@ public class Hex {
 
   public static String toHexString(byte[] bytes) {
     StringBuffer buf = new StringBuffer();
-    for (int i=0;i<bytes.length;i++) {
+    for (int i = 0; i < bytes.length; i++) {
       appendHexChar(buf, bytes[i]);
     }
     return buf.toString();
@@ -47,7 +45,7 @@ public class Hex {
 
   public static byte[] fromStringCondensed(String encoded) throws IOException {
     final char[] data = encoded.toCharArray();
-    final int    len  = data.length;
+    final int len = data.length;
 
     if ((len & 0x01) != 0) {
       throw new IOException("Odd number of characters.");
@@ -75,5 +73,4 @@ public class Hex {
     buf.append(HEX_DIGITS[(b >> 4) & 0xf]);
     buf.append(HEX_DIGITS[b & 0xf]);
   }
-
 }

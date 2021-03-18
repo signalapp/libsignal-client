@@ -1,19 +1,18 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.state.impl;
-
-import org.whispersystems.libsignal.InvalidKeyIdException;
-import org.whispersystems.libsignal.state.SignedPreKeyRecord;
-import org.whispersystems.libsignal.state.SignedPreKeyStore;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.whispersystems.libsignal.InvalidKeyIdException;
+import org.whispersystems.libsignal.state.SignedPreKeyRecord;
+import org.whispersystems.libsignal.state.SignedPreKeyStore;
 
 public class InMemorySignedPreKeyStore implements SignedPreKeyStore {
 

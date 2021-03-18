@@ -30,5 +30,4 @@ public class CryptographicHash {
   public byte[] finish() {
     return Native.CryptographicHash_Finalize(this.handle);
   }
-
 }

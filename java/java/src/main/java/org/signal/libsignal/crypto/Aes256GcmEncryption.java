@@ -11,7 +11,8 @@ import org.whispersystems.libsignal.InvalidKeyException;
 class Aes256GcmEncryption {
   private long handle;
 
-  public Aes256GcmEncryption(byte[] key, byte[] nonce, byte[] associatedData) throws InvalidKeyException {
+  public Aes256GcmEncryption(byte[] key, byte[] nonce, byte[] associatedData)
+      throws InvalidKeyException {
     this.handle = Native.Aes256GcmEncryption_New(key, nonce, associatedData);
   }
 
@@ -30,5 +31,4 @@ class Aes256GcmEncryption {
     this.handle = 0;
     return tag;
   }
-
 }

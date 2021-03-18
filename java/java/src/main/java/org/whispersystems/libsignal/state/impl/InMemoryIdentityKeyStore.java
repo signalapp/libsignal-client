@@ -1,27 +1,26 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.state.impl;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.IdentityKeyPair;
 import org.whispersystems.libsignal.SignalProtocolAddress;
 import org.whispersystems.libsignal.state.IdentityKeyStore;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class InMemoryIdentityKeyStore implements IdentityKeyStore {
 
   private final Map<SignalProtocolAddress, IdentityKey> trustedKeys = new HashMap<>();
 
   private final IdentityKeyPair identityKeyPair;
-  private final int             localRegistrationId;
+  private final int localRegistrationId;
 
   public InMemoryIdentityKeyStore(IdentityKeyPair identityKeyPair, int localRegistrationId) {
-    this.identityKeyPair     = identityKeyPair;
+    this.identityKeyPair = identityKeyPair;
     this.localRegistrationId = localRegistrationId;
   }
 
@@ -48,7 +47,8 @@ public class InMemoryIdentityKeyStore implements IdentityKeyStore {
   }
 
   @Override
-  public boolean isTrustedIdentity(SignalProtocolAddress address, IdentityKey identityKey, Direction direction) {
+  public boolean isTrustedIdentity(
+      SignalProtocolAddress address, IdentityKey identityKey, Direction direction) {
     IdentityKey trusted = trustedKeys.get(address);
     return (trusted == null || trusted.equals(identityKey));
   }

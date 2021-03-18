@@ -1,7 +1,6 @@
 package org.signal.libsignal.metadata.protocol;
 
 import org.signal.client.internal.Native;
-
 import org.signal.libsignal.metadata.InvalidMetadataMessageException;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
 
@@ -10,7 +9,7 @@ public class UnidentifiedSenderMessage {
 
   @Override
   protected void finalize() {
-     Native.UnidentifiedSenderMessage_Destroy(this.handle);
+    Native.UnidentifiedSenderMessage_Destroy(this.handle);
   }
 
   public UnidentifiedSenderMessage(byte[] serialized) throws InvalidMetadataMessageException {
@@ -21,8 +20,11 @@ public class UnidentifiedSenderMessage {
     }
   }
 
-  public UnidentifiedSenderMessage(ECPublicKey ephemeral, byte[] encryptedStatic, byte[] encryptedMessage) {
-    this.handle = Native.UnidentifiedSenderMessage_New(ephemeral.nativeHandle(), encryptedStatic, encryptedMessage);
+  public UnidentifiedSenderMessage(
+      ECPublicKey ephemeral, byte[] encryptedStatic, byte[] encryptedMessage) {
+    this.handle =
+        Native.UnidentifiedSenderMessage_New(
+            ephemeral.nativeHandle(), encryptedStatic, encryptedMessage);
   }
 
   public ECPublicKey getEphemeral() {

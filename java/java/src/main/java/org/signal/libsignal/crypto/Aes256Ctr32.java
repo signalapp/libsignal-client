@@ -23,5 +23,4 @@ class Aes256Ctr32 {
   byte[] process(byte[] data) {
     return Native.Aes256Ctr32_Process(this.handle, data);
   }
-
 }

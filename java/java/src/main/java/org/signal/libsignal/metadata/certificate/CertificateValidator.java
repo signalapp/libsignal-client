@@ -1,10 +1,9 @@
 package org.signal.libsignal.metadata.certificate;
 
 import org.signal.client.internal.Native;
-
+import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.ecc.Curve;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
-import org.whispersystems.libsignal.InvalidKeyException;
 
 public class CertificateValidator {
   private final ECPublicKey trustRoot;
@@ -17,11 +16,13 @@ public class CertificateValidator {
     return this.trustRoot;
   }
 
-  public void validate(SenderCertificate certificate, long validationTime) throws InvalidCertificateException {
+  public void validate(SenderCertificate certificate, long validationTime)
+      throws InvalidCertificateException {
     try {
-       if (!Native.SenderCertificate_Validate(certificate.nativeHandle(), trustRoot.nativeHandle(), validationTime)) {
-         throw new InvalidCertificateException("Validation failed");
-       }
+      if (!Native.SenderCertificate_Validate(
+          certificate.nativeHandle(), trustRoot.nativeHandle(), validationTime)) {
+        throw new InvalidCertificateException("Validation failed");
+      }
     } catch (Exception e) {
       throw new InvalidCertificateException(e);
     }
@@ -30,7 +31,8 @@ public class CertificateValidator {
   // VisibleForTesting
   void validate(ServerCertificate certificate) throws InvalidCertificateException {
     try {
-      if (!Curve.verifySignature(trustRoot, certificate.getCertificate(), certificate.getSignature())) {
+      if (!Curve.verifySignature(
+          trustRoot, certificate.getCertificate(), certificate.getSignature())) {
         throw new InvalidCertificateException("Signature failed");
       }
     } catch (InvalidKeyException e) {

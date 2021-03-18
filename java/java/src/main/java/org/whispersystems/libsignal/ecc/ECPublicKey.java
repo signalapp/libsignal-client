@@ -1,13 +1,12 @@
 /**
  * Copyright (C) 2013-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
-
 package org.whispersystems.libsignal.ecc;
 
-import org.signal.client.internal.Native;
 import java.util.Arrays;
+import org.signal.client.internal.Native;
 
 public class ECPublicKey implements Comparable<ECPublicKey> {
 
@@ -23,7 +22,7 @@ public class ECPublicKey implements Comparable<ECPublicKey> {
     this.handle = Native.ECPublicKey_Deserialize(serialized, 0);
   }
 
-  static public ECPublicKey fromPublicKeyBytes(byte[] key) {
+  public static ECPublicKey fromPublicKeyBytes(byte[] key) {
     byte[] with_type = new byte[33];
     with_type[0] = 0x05;
     System.arraycopy(key, 0, with_type, 1, 32);
@@ -39,7 +38,7 @@ public class ECPublicKey implements Comparable<ECPublicKey> {
 
   @Override
   protected void finalize() {
-     Native.ECPublicKey_Destroy(this.handle);
+    Native.ECPublicKey_Destroy(this.handle);
   }
 
   public boolean verifySignature(byte[] message, byte[] signature) {
@@ -65,10 +64,10 @@ public class ECPublicKey implements Comparable<ECPublicKey> {
 
   @Override
   public boolean equals(Object other) {
-    if (other == null)                      return false;
+    if (other == null) return false;
     if (!(other instanceof ECPublicKey)) return false;
 
-    ECPublicKey that = (ECPublicKey)other;
+    ECPublicKey that = (ECPublicKey) other;
     return Arrays.equals(this.serialize(), that.serialize());
   }
 

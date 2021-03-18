@@ -6,8 +6,8 @@
 package org.signal.libsignal.crypto;
 
 import org.signal.client.internal.Native;
-import org.whispersystems.libsignal.InvalidMessageException;
 import org.whispersystems.libsignal.InvalidKeyException;
+import org.whispersystems.libsignal.InvalidMessageException;
 
 class Aes256GcmSiv {
   private final long handle;

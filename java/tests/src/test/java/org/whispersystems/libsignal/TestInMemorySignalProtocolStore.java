@@ -13,8 +13,8 @@ public class TestInMemorySignalProtocolStore extends InMemorySignalProtocolStore
   private static IdentityKeyPair generateIdentityKeyPair() {
     ECKeyPair identityKeyPairKeys = Curve.generateKeyPair();
 
-    return new IdentityKeyPair(new IdentityKey(identityKeyPairKeys.getPublicKey()),
-                                               identityKeyPairKeys.getPrivateKey());
+    return new IdentityKeyPair(
+        new IdentityKey(identityKeyPairKeys.getPublicKey()), identityKeyPairKeys.getPrivateKey());
   }
 
   private static int generateRegistrationId() {

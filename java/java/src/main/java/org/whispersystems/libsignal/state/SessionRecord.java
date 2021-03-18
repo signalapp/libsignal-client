@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.state;
 
@@ -44,8 +44,8 @@ public class SessionRecord {
   }
 
   /**
-   * Move the current SessionState into the list of "previous" session states, and replace
-   * the current SessionState with a fresh reset instance.
+   * Move the current SessionState into the list of "previous" session states, and replace the
+   * current SessionState with a fresh reset instance.
    */
   public void archiveCurrentState() {
     Native.SessionRecord_ArchiveCurrentState(this.handle);

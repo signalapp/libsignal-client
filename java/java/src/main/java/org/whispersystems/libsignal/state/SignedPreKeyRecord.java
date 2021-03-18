@@ -1,17 +1,15 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.state;
 
+import java.io.IOException;
 import org.signal.client.internal.Native;
-import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.ecc.ECKeyPair;
 import org.whispersystems.libsignal.ecc.ECPrivateKey;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
-
-import java.io.IOException;
 
 public class SignedPreKeyRecord {
   private long handle;
@@ -22,10 +20,13 @@ public class SignedPreKeyRecord {
   }
 
   public SignedPreKeyRecord(int id, long timestamp, ECKeyPair keyPair, byte[] signature) {
-    this.handle = Native.SignedPreKeyRecord_New(id, timestamp,
-                      keyPair.getPublicKey().nativeHandle(),
-                      keyPair.getPrivateKey().nativeHandle(),
-                      signature);
+    this.handle =
+        Native.SignedPreKeyRecord_New(
+            id,
+            timestamp,
+            keyPair.getPublicKey().nativeHandle(),
+            keyPair.getPrivateKey().nativeHandle(),
+            signature);
   }
 
   public SignedPreKeyRecord(byte[] serialized) throws IOException {
@@ -42,7 +43,8 @@ public class SignedPreKeyRecord {
 
   public ECKeyPair getKeyPair() {
     ECPublicKey publicKey = new ECPublicKey(Native.SignedPreKeyRecord_GetPublicKey(this.handle));
-    ECPrivateKey privateKey = new ECPrivateKey(Native.SignedPreKeyRecord_GetPrivateKey(this.handle));
+    ECPrivateKey privateKey =
+        new ECPrivateKey(Native.SignedPreKeyRecord_GetPrivateKey(this.handle));
     return new ECKeyPair(publicKey, privateKey);
   }
 
@@ -57,5 +59,4 @@ public class SignedPreKeyRecord {
   public long nativeHandle() {
     return this.handle;
   }
-
 }

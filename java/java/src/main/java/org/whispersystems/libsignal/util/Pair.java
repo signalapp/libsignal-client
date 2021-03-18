@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.util;
 
@@ -14,18 +14,18 @@ public class Pair<T1, T2> {
     this.v2 = v2;
   }
 
-  public T1 first(){
+  public T1 first() {
     return v1;
   }
 
-  public T2 second(){
+  public T2 second() {
     return v2;
   }
 
   public boolean equals(Object o) {
-    return o instanceof Pair &&
-        equal(((Pair) o).first(), first()) &&
-        equal(((Pair) o).second(), second());
+    return o instanceof Pair
+        && equal(((Pair) o).first(), first())
+        && equal(((Pair) o).second(), second());
   }
 
   public int hashCode() {

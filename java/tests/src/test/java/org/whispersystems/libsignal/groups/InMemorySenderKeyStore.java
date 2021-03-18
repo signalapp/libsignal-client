@@ -1,11 +1,10 @@
 package org.whispersystems.libsignal.groups;
 
-import org.whispersystems.libsignal.groups.state.SenderKeyRecord;
-import org.whispersystems.libsignal.groups.state.SenderKeyStore;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.whispersystems.libsignal.groups.state.SenderKeyRecord;
+import org.whispersystems.libsignal.groups.state.SenderKeyStore;
 
 public class InMemorySenderKeyStore implements SenderKeyStore {
 

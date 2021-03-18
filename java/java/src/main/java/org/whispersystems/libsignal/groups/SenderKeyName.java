@@ -1,16 +1,14 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.groups;
 
 import org.signal.client.internal.Native;
 import org.whispersystems.libsignal.SignalProtocolAddress;
 
-/**
- * A representation of a (groupId + senderId + deviceId) tuple.
- */
+/** A representation of a (groupId + senderId + deviceId) tuple. */
 public class SenderKeyName {
   private long handle;
 
@@ -32,19 +30,19 @@ public class SenderKeyName {
   }
 
   public SignalProtocolAddress getSender() {
-    return new SignalProtocolAddress(Native.SenderKeyName_GetSenderName(this.handle), Native.SenderKeyName_GetSenderDeviceId(this.handle));
+    return new SignalProtocolAddress(
+        Native.SenderKeyName_GetSenderName(this.handle),
+        Native.SenderKeyName_GetSenderDeviceId(this.handle));
   }
 
   @Override
   public boolean equals(Object other) {
-    if (other == null)                     return false;
+    if (other == null) return false;
     if (!(other instanceof SenderKeyName)) return false;
 
-    SenderKeyName that = (SenderKeyName)other;
+    SenderKeyName that = (SenderKeyName) other;
 
-    return
-       this.getGroupId().equals(that.getGroupId()) &&
-       this.getSender().equals(that.getSender());
+    return this.getGroupId().equals(that.getGroupId()) && this.getSender().equals(that.getSender());
   }
 
   @Override
@@ -55,5 +53,4 @@ public class SenderKeyName {
   public long nativeHandle() {
     return this.handle;
   }
-
 }

@@ -1,16 +1,15 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.groups.state;
 
-import org.signal.client.internal.Native;
 import java.io.IOException;
+import org.signal.client.internal.Native;
 
 /**
- * A durable representation of a set of SenderKeyStates for a specific
- * SenderKeyName.
+ * A durable representation of a set of SenderKeyStates for a specific SenderKeyName.
  *
  * @author Moxie Marlinspike
  */

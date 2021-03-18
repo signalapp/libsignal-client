@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.protocol;
 
@@ -20,12 +20,11 @@ public class PreKeySignalMessage implements CiphertextMessage {
 
   @Override
   protected void finalize() {
-     Native.PreKeySignalMessage_Destroy(this.handle);
+    Native.PreKeySignalMessage_Destroy(this.handle);
   }
 
   public PreKeySignalMessage(byte[] serialized)
-      throws InvalidMessageException, InvalidVersionException
-  {
+      throws InvalidMessageException, InvalidVersionException {
     this.handle = Native.PreKeySignalMessage_Deserialize(serialized);
   }
 
@@ -33,13 +32,23 @@ public class PreKeySignalMessage implements CiphertextMessage {
     this.handle = handle;
   }
 
-  public PreKeySignalMessage(int messageVersion, int registrationId, Optional<Integer> preKeyId,
-                             int signedPreKeyId, ECPublicKey baseKey, IdentityKey identityKey,
-                             SignalMessage message) {
-    this.handle = Native.PreKeySignalMessage_New(messageVersion, registrationId, preKeyId.or(-1),
-                                                 signedPreKeyId, baseKey.nativeHandle(),
-                                                 identityKey.getPublicKey().nativeHandle(),
-                                                 message.nativeHandle());
+  public PreKeySignalMessage(
+      int messageVersion,
+      int registrationId,
+      Optional<Integer> preKeyId,
+      int signedPreKeyId,
+      ECPublicKey baseKey,
+      IdentityKey identityKey,
+      SignalMessage message) {
+    this.handle =
+        Native.PreKeySignalMessage_New(
+            messageVersion,
+            registrationId,
+            preKeyId.or(-1),
+            signedPreKeyId,
+            baseKey.nativeHandle(),
+            identityKey.getPublicKey().nativeHandle(),
+            message.nativeHandle());
   }
 
   public int getMessageVersion() {
@@ -56,7 +65,7 @@ public class PreKeySignalMessage implements CiphertextMessage {
 
   public Optional<Integer> getPreKeyId() {
     int pre_key = Native.PreKeySignalMessage_GetPreKeyId(this.handle);
-    if(pre_key < 0) {
+    if (pre_key < 0) {
       return Optional.absent();
     } else {
       return Optional.of(pre_key);

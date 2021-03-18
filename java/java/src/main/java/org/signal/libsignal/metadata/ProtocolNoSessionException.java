@@ -1,6 +1,5 @@
 package org.signal.libsignal.metadata;
 
-
 import org.whispersystems.libsignal.NoSessionException;
 
 public class ProtocolNoSessionException extends ProtocolException {

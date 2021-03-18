@@ -5,8 +5,8 @@
 
 package org.signal.libsignal.devicetransfer;
 
-import junit.framework.TestCase;
 import javax.security.cert.X509Certificate;
+import junit.framework.TestCase;
 
 public class DeviceTransferKeyTest extends TestCase {
   public void testDeviceTransferKey() throws Exception {

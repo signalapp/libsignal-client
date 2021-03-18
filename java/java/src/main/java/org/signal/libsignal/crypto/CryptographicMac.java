@@ -30,5 +30,4 @@ public class CryptographicMac {
   public byte[] finish() {
     return Native.CryptographicMac_Finalize(this.handle);
   }
-
 }

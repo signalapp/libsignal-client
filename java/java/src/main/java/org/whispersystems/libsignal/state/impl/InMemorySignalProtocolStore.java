@@ -1,28 +1,27 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.state.impl;
 
-import org.whispersystems.libsignal.SignalProtocolAddress;
+import java.util.List;
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.IdentityKeyPair;
 import org.whispersystems.libsignal.InvalidKeyIdException;
-import org.whispersystems.libsignal.state.SignalProtocolStore;
+import org.whispersystems.libsignal.SignalProtocolAddress;
 import org.whispersystems.libsignal.state.PreKeyRecord;
 import org.whispersystems.libsignal.state.SessionRecord;
+import org.whispersystems.libsignal.state.SignalProtocolStore;
 import org.whispersystems.libsignal.state.SignedPreKeyRecord;
-
-import java.util.List;
 
 public class InMemorySignalProtocolStore implements SignalProtocolStore {
 
-  private final InMemoryPreKeyStore       preKeyStore       = new InMemoryPreKeyStore();
-  private final InMemorySessionStore      sessionStore      = new InMemorySessionStore();
+  private final InMemoryPreKeyStore preKeyStore = new InMemoryPreKeyStore();
+  private final InMemorySessionStore sessionStore = new InMemorySessionStore();
   private final InMemorySignedPreKeyStore signedPreKeyStore = new InMemorySignedPreKeyStore();
 
-  private final InMemoryIdentityKeyStore  identityKeyStore;
+  private final InMemoryIdentityKeyStore identityKeyStore;
 
   public InMemorySignalProtocolStore(IdentityKeyPair identityKeyPair, int registrationId) {
     this.identityKeyStore = new InMemoryIdentityKeyStore(identityKeyPair, registrationId);
@@ -44,7 +43,8 @@ public class InMemorySignalProtocolStore implements SignalProtocolStore {
   }
 
   @Override
-  public boolean isTrustedIdentity(SignalProtocolAddress address, IdentityKey identityKey, Direction direction) {
+  public boolean isTrustedIdentity(
+      SignalProtocolAddress address, IdentityKey identityKey, Direction direction) {
     return identityKeyStore.isTrustedIdentity(address, identityKey, direction);
   }
 

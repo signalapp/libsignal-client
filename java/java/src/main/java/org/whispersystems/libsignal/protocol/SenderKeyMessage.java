@@ -1,32 +1,27 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.protocol;
 
 import org.signal.client.internal.Native;
-
-import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.InvalidMessageException;
 import org.whispersystems.libsignal.LegacyMessageException;
 import org.whispersystems.libsignal.ecc.ECPrivateKey;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
 
-import java.text.ParseException;
-
 public class SenderKeyMessage implements CiphertextMessage {
-
-
 
   private long handle;
 
   @Override
   protected void finalize() {
-     Native.SenderKeyMessage_Destroy(this.handle);
+    Native.SenderKeyMessage_Destroy(this.handle);
   }
 
-  public SenderKeyMessage(byte[] serialized) throws InvalidMessageException, LegacyMessageException {
+  public SenderKeyMessage(byte[] serialized)
+      throws InvalidMessageException, LegacyMessageException {
     handle = Native.SenderKeyMessage_Deserialize(serialized);
   }
 
@@ -46,10 +41,8 @@ public class SenderKeyMessage implements CiphertextMessage {
     return Native.SenderKeyMessage_GetCipherText(this.handle);
   }
 
-  public void verifySignature(ECPublicKey signatureKey)
-      throws InvalidMessageException
-  {
-    if(!Native.SenderKeyMessage_VerifySignature(this.handle, signatureKey.nativeHandle())) {
+  public void verifySignature(ECPublicKey signatureKey) throws InvalidMessageException {
+    if (!Native.SenderKeyMessage_VerifySignature(this.handle, signatureKey.nativeHandle())) {
       throw new InvalidMessageException("Invalid signature!");
     }
   }

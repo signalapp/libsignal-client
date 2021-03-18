@@ -1,17 +1,15 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.state;
 
+import java.io.IOException;
 import org.signal.client.internal.Native;
-import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.ecc.ECKeyPair;
 import org.whispersystems.libsignal.ecc.ECPrivateKey;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
-
-import java.io.IOException;
 
 public class PreKeyRecord {
   private long handle;
@@ -22,7 +20,9 @@ public class PreKeyRecord {
   }
 
   public PreKeyRecord(int id, ECKeyPair keyPair) {
-    this.handle = Native.PreKeyRecord_New(id, keyPair.getPublicKey().nativeHandle(), keyPair.getPrivateKey().nativeHandle());
+    this.handle =
+        Native.PreKeyRecord_New(
+            id, keyPair.getPublicKey().nativeHandle(), keyPair.getPrivateKey().nativeHandle());
   }
 
   public PreKeyRecord(byte[] serialized) throws IOException {

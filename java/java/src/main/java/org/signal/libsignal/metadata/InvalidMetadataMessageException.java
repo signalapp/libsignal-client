@@ -1,6 +1,5 @@
 package org.signal.libsignal.metadata;
 
-
 public class InvalidMetadataMessageException extends Exception {
   public InvalidMetadataMessageException(String s) {
     super(s);
@@ -9,5 +8,4 @@ public class InvalidMetadataMessageException extends Exception {
   public InvalidMetadataMessageException(Exception s) {
     super(s);
   }
-
 }

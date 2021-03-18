@@ -1,10 +1,7 @@
 package org.signal.libsignal.metadata.certificate;
 
 import org.signal.client.internal.Native;
-
 import org.whispersystems.libsignal.ecc.ECPublicKey;
-import org.whispersystems.libsignal.InvalidKeyException;
-import org.whispersystems.libsignal.InvalidMessageException;
 import org.whispersystems.libsignal.util.guava.Optional;
 
 public class SenderCertificate {
@@ -12,7 +9,7 @@ public class SenderCertificate {
 
   @Override
   protected void finalize() {
-     Native.SenderCertificate_Destroy(this.handle);
+    Native.SenderCertificate_Destroy(this.handle);
   }
 
   public long nativeHandle() {

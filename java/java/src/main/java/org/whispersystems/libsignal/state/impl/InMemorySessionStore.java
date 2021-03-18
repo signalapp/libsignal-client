@@ -1,19 +1,18 @@
 /**
  * Copyright (C) 2014-2016 Open Whisper Systems
  *
- * Licensed according to the LICENSE file in this repository.
+ * <p>Licensed according to the LICENSE file in this repository.
  */
 package org.whispersystems.libsignal.state.impl;
-
-import org.whispersystems.libsignal.SignalProtocolAddress;
-import org.whispersystems.libsignal.state.SessionRecord;
-import org.whispersystems.libsignal.state.SessionStore;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.whispersystems.libsignal.SignalProtocolAddress;
+import org.whispersystems.libsignal.state.SessionRecord;
+import org.whispersystems.libsignal.state.SessionStore;
 
 public class InMemorySessionStore implements SessionStore {
 
@@ -39,9 +38,7 @@ public class InMemorySessionStore implements SessionStore {
     List<Integer> deviceIds = new LinkedList<>();
 
     for (SignalProtocolAddress key : sessions.keySet()) {
-      if (key.getName().equals(name) &&
-          key.getDeviceId() != 1)
-      {
+      if (key.getName().equals(name) && key.getDeviceId() != 1) {
         deviceIds.add(key.getDeviceId());
       }
     }

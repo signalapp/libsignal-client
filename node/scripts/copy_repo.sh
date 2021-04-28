@@ -22,7 +22,7 @@ cd "${SCRIPT_DIR}"/../..
 
 mkdir -p $1
 
-cp -vf package.json $1
+./node/scripts/rewrite_package_json.py package.json > $1/package.json
 cp -vf node/index.ts $1
 cp -vf node/libsignal_client.d.ts $1
 

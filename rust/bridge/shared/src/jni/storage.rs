@@ -18,9 +18,10 @@ fn protocol_address_to_jobject<'a>(
     address: &ProtocolAddress,
 ) -> Result<JObject<'a>, SignalJniError> {
     let address_class = env.find_class("org/whispersystems/libsignal/SignalProtocolAddress")?;
+    let device_id: u32 = address.device_id().into();
     let address_ctor_args = [
         JObject::from(env.new_string(address.name())?).into(),
-        JValue::from(address.device_id().convert_into(env)?),
+        JValue::from(device_id.convert_into(env)?),
     ];
 
     let address_ctor_sig = jni_signature!((java.lang.String, int) -> void);

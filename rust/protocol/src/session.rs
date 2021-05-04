@@ -4,13 +4,13 @@
 //
 
 use crate::{
-    Context, Direction, IdentityKeyStore, KeyPair, PreKeyBundle, PreKeySignalMessage, PreKeyStore,
-    ProtocolAddress, Result, SessionRecord, SessionStore, SignalProtocolError, SignedPreKeyStore,
+    Context, Direction, IdentityKeyStore, KeyPair, PreKeyBundle, PreKeyId, PreKeySignalMessage,
+    PreKeyStore, ProtocolAddress, Result, SessionRecord, SessionStore, SignalProtocolError,
+    SignedPreKeyStore,
 };
 
 use crate::ratchet;
 use crate::ratchet::{AliceSignalProtocolParameters, BobSignalProtocolParameters};
-use crate::state::PreKeyId;
 use rand::{CryptoRng, Rng};
 
 /*
@@ -110,8 +110,9 @@ async fn process_prekey_v3(
 
     let mut new_session = ratchet::initialize_bob_session(&parameters)?;
 
-    new_session.set_local_registration_id(identity_store.get_local_registration_id(ctx).await?)?;
-    new_session.set_remote_registration_id(message.registration_id())?;
+    new_session
+        .set_local_registration_id(identity_store.get_local_registration_id(ctx).await?.into())?;
+    new_session.set_remote_registration_id(message.registration_id().into())?;
     new_session.set_alice_base_key(&message.base_key().serialize())?;
 
     session_record.promote_state(new_session)?;
@@ -172,7 +173,7 @@ pub async fn process_prekey_bundle<R: Rng + CryptoRng>(
     log::info!(
         "set_unacknowledged_pre_key_message for: {} with preKeyId: {}",
         remote_address,
-        their_one_time_prekey_id.map_or_else(|| "<none>".to_string(), |id| id.to_string())
+        their_one_time_prekey_id.map_or_else(|| "<none>".to_string(), |id| format!("{:?}", id))
     );
 
     session.set_unacknowledged_pre_key_message(
@@ -181,7 +182,8 @@ pub async fn process_prekey_bundle<R: Rng + CryptoRng>(
         &our_base_key_pair.public_key,
     )?;
 
-    session.set_local_registration_id(identity_store.get_local_registration_id(ctx).await?)?;
+    session
+        .set_local_registration_id(identity_store.get_local_registration_id(ctx).await?.into())?;
     session.set_remote_registration_id(bundle.registration_id()?)?;
     session.set_alice_base_key(&our_base_key_pair.public_key.serialize())?;
 

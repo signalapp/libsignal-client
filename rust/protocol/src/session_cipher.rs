@@ -53,7 +53,7 @@ pub async fn message_encrypt(
             remote_address,
             items
                 .pre_key_id()?
-                .map_or_else(|| "<none>".to_string(), |id| id.to_string())
+                .map_or_else(|| "<none>".to_string(), |id| format!("{:?}", id))
         );
 
         let message = SignalMessage::new(

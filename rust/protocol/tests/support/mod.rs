@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -9,9 +9,9 @@ use rand::{rngs::OsRng, CryptoRng, Rng};
 pub fn test_in_memory_protocol_store() -> Result<InMemSignalProtocolStore, SignalProtocolError> {
     let mut csprng = OsRng;
     let identity_key = IdentityKeyPair::generate(&mut csprng);
-    let registration_id = 5; // fixme randomly generate this
+    let registration_id: u32 = csprng.gen();
 
-    InMemSignalProtocolStore::new(identity_key, registration_id)
+    InMemSignalProtocolStore::new(identity_key, registration_id.into())
 }
 
 #[allow(dead_code)]
@@ -70,10 +70,10 @@ pub async fn create_pre_key_bundle<R: Rng + CryptoRng>(
     let signed_pre_key_id: u32 = csprng.gen();
 
     let pre_key_bundle = PreKeyBundle::new(
-        store.get_local_registration_id(None).await?,
+        store.get_local_registration_id(None).await?.into(),
         device_id,
-        Some((pre_key_id, pre_key_pair.public_key)),
-        signed_pre_key_id,
+        Some((pre_key_id.into(), pre_key_pair.public_key)),
+        signed_pre_key_id.into(),
         signed_pre_key_pair.public_key,
         signed_pre_key_signature.to_vec(),
         *store.get_identity_key_pair(None).await?.identity_key(),
@@ -81,8 +81,8 @@ pub async fn create_pre_key_bundle<R: Rng + CryptoRng>(
 
     store
         .save_pre_key(
-            pre_key_id,
-            &PreKeyRecord::new(pre_key_id, &pre_key_pair),
+            pre_key_id.into(),
+            &PreKeyRecord::new(pre_key_id.into(), &pre_key_pair),
             None,
         )
         .await?;
@@ -91,9 +91,9 @@ pub async fn create_pre_key_bundle<R: Rng + CryptoRng>(
 
     store
         .save_signed_pre_key(
-            signed_pre_key_id,
+            signed_pre_key_id.into(),
             &SignedPreKeyRecord::new(
-                signed_pre_key_id,
+                signed_pre_key_id.into(),
                 timestamp,
                 &signed_pre_key_pair,
                 &signed_pre_key_signature,

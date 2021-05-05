@@ -77,7 +77,10 @@ impl IdentityKeyStore for &FfiIdentityKeyStoreStruct {
         Ok(IdentityKeyPair::new(IdentityKey::new(pub_key), *priv_key))
     }
 
-    async fn get_local_registration_id(&self, ctx: Context) -> Result<u32, SignalProtocolError> {
+    async fn get_local_registration_id(
+        &self,
+        ctx: Context,
+    ) -> Result<SessionSeed, SignalProtocolError> {
         let ctx = ctx.unwrap_or(std::ptr::null_mut());
         let mut id = 0;
         let result = (self.get_local_registration_id)(self.ctx, &mut id, ctx);
@@ -89,7 +92,7 @@ impl IdentityKeyStore for &FfiIdentityKeyStoreStruct {
             ));
         }
 
-        Ok(id)
+        Ok(id.into())
     }
 
     async fn save_identity(
@@ -194,12 +197,12 @@ pub struct FfiPreKeyStoreStruct {
 impl PreKeyStore for &FfiPreKeyStoreStruct {
     async fn get_pre_key(
         &self,
-        prekey_id: u32,
+        prekey_id: PreKeyId,
         ctx: Context,
     ) -> Result<PreKeyRecord, SignalProtocolError> {
         let ctx = ctx.unwrap_or(std::ptr::null_mut());
         let mut record = std::ptr::null_mut();
-        let result = (self.load_pre_key)(self.ctx, &mut record, prekey_id, ctx);
+        let result = (self.load_pre_key)(self.ctx, &mut record, prekey_id.into(), ctx);
 
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
@@ -218,12 +221,12 @@ impl PreKeyStore for &FfiPreKeyStoreStruct {
 
     async fn save_pre_key(
         &mut self,
-        prekey_id: u32,
+        prekey_id: PreKeyId,
         record: &PreKeyRecord,
         ctx: Context,
     ) -> Result<(), SignalProtocolError> {
         let ctx = ctx.unwrap_or(std::ptr::null_mut());
-        let result = (self.store_pre_key)(self.ctx, prekey_id, &*record, ctx);
+        let result = (self.store_pre_key)(self.ctx, prekey_id.into(), &*record, ctx);
 
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
@@ -237,11 +240,11 @@ impl PreKeyStore for &FfiPreKeyStoreStruct {
 
     async fn remove_pre_key(
         &mut self,
-        prekey_id: u32,
+        prekey_id: PreKeyId,
         ctx: Context,
     ) -> Result<(), SignalProtocolError> {
         let ctx = ctx.unwrap_or(std::ptr::null_mut());
-        let result = (self.remove_pre_key)(self.ctx, prekey_id, ctx);
+        let result = (self.remove_pre_key)(self.ctx, prekey_id.into(), ctx);
 
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
@@ -279,12 +282,12 @@ pub struct FfiSignedPreKeyStoreStruct {
 impl SignedPreKeyStore for &FfiSignedPreKeyStoreStruct {
     async fn get_signed_pre_key(
         &self,
-        prekey_id: u32,
+        prekey_id: SignedPreKeyId,
         ctx: Context,
     ) -> Result<SignedPreKeyRecord, SignalProtocolError> {
         let ctx = ctx.unwrap_or(std::ptr::null_mut());
         let mut record = std::ptr::null_mut();
-        let result = (self.load_signed_pre_key)(self.ctx, &mut record, prekey_id, ctx);
+        let result = (self.load_signed_pre_key)(self.ctx, &mut record, prekey_id.into(), ctx);
 
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
@@ -304,12 +307,12 @@ impl SignedPreKeyStore for &FfiSignedPreKeyStoreStruct {
 
     async fn save_signed_pre_key(
         &mut self,
-        prekey_id: u32,
+        prekey_id: SignedPreKeyId,
         record: &SignedPreKeyRecord,
         ctx: Context,
     ) -> Result<(), SignalProtocolError> {
         let ctx = ctx.unwrap_or(std::ptr::null_mut());
-        let result = (self.store_signed_pre_key)(self.ctx, prekey_id, &*record, ctx);
+        let result = (self.store_signed_pre_key)(self.ctx, prekey_id.into(), &*record, ctx);
 
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(

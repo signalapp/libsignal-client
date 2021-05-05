@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -20,11 +20,27 @@ pub enum Direction {
     Receiving,
 }
 
+/// A locally-generated random number used to construct the initial value of a message chain.
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord)]
+pub struct SessionSeed(u32);
+
+impl From<u32> for SessionSeed {
+    fn from(value: u32) -> Self {
+        Self(value)
+    }
+}
+
+impl From<SessionSeed> for u32 {
+    fn from(value: SessionSeed) -> Self {
+        value.0
+    }
+}
+
 #[async_trait(?Send)]
 pub trait IdentityKeyStore {
     async fn get_identity_key_pair(&self, ctx: Context) -> Result<IdentityKeyPair>;
 
-    async fn get_local_registration_id(&self, ctx: Context) -> Result<u32>;
+    async fn get_local_registration_id(&self, ctx: Context) -> Result<SessionSeed>;
 
     async fn save_identity(
         &mut self,

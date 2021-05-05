@@ -105,31 +105,31 @@ impl Finalize for NodePreKeyStore {
 impl PreKeyStore for NodePreKeyStore {
     async fn get_pre_key(
         &self,
-        pre_key_id: u32,
+        pre_key_id: PreKeyId,
         _ctx: libsignal_protocol::Context,
     ) -> Result<PreKeyRecord, SignalProtocolError> {
-        self.do_get_pre_key(pre_key_id)
+        self.do_get_pre_key(pre_key_id.into())
             .await
             .map_err(|s| js_error_to_rust("getPreKey", s))
     }
 
     async fn save_pre_key(
         &mut self,
-        pre_key_id: u32,
+        pre_key_id: PreKeyId,
         record: &PreKeyRecord,
         _ctx: libsignal_protocol::Context,
     ) -> Result<(), SignalProtocolError> {
-        self.do_save_pre_key(pre_key_id, record.clone())
+        self.do_save_pre_key(pre_key_id.into(), record.clone())
             .await
             .map_err(|s| js_error_to_rust("savePreKey", s))
     }
 
     async fn remove_pre_key(
         &mut self,
-        pre_key_id: u32,
+        pre_key_id: PreKeyId,
         _ctx: libsignal_protocol::Context,
     ) -> Result<(), SignalProtocolError> {
-        self.do_remove_pre_key(pre_key_id)
+        self.do_remove_pre_key(pre_key_id.into())
             .await
             .map_err(|s| js_error_to_rust("removePreKey", s))
     }
@@ -215,21 +215,21 @@ impl Finalize for NodeSignedPreKeyStore {
 impl SignedPreKeyStore for NodeSignedPreKeyStore {
     async fn get_signed_pre_key(
         &self,
-        signed_pre_key_id: u32,
+        signed_pre_key_id: SignedPreKeyId,
         _ctx: libsignal_protocol::Context,
     ) -> Result<SignedPreKeyRecord, SignalProtocolError> {
-        self.do_get_signed_pre_key(signed_pre_key_id)
+        self.do_get_signed_pre_key(signed_pre_key_id.into())
             .await
             .map_err(|s| js_error_to_rust("getSignedPreKey", s))
     }
 
     async fn save_signed_pre_key(
         &mut self,
-        signed_pre_key_id: u32,
+        signed_pre_key_id: SignedPreKeyId,
         record: &SignedPreKeyRecord,
         _ctx: libsignal_protocol::Context,
     ) -> Result<(), SignalProtocolError> {
-        self.do_save_signed_pre_key(signed_pre_key_id, record.clone())
+        self.do_save_signed_pre_key(signed_pre_key_id.into(), record.clone())
             .await
             .map_err(|s| js_error_to_rust("saveSignedPreKey", s))
     }
@@ -516,10 +516,12 @@ impl IdentityKeyStore for NodeIdentityKeyStore {
     async fn get_local_registration_id(
         &self,
         _ctx: libsignal_protocol::Context,
-    ) -> Result<u32, SignalProtocolError> {
-        self.do_get_local_registration_id()
+    ) -> Result<SessionSeed, SignalProtocolError> {
+        Ok(self
+            .do_get_local_registration_id()
             .await
-            .map_err(|s| js_error_to_rust("getLocalRegistrationId", s))
+            .map_err(|s| js_error_to_rust("getLocalRegistrationId", s))?
+            .into())
     }
 
     async fn get_identity(

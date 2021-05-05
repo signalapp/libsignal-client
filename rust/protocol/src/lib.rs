@@ -40,7 +40,7 @@ pub use {
     identity_key::{IdentityKey, IdentityKeyPair},
     kdf::HKDF,
     protocol::{
-        CiphertextMessage, CiphertextMessageType, PreKeySignalMessage,
+        CiphertextMessage, CiphertextMessageType, MessageVersion, PreKeySignalMessage,
         SenderKeyDistributionMessage, SenderKeyMessage, SignalMessage,
     },
     ratchet::{

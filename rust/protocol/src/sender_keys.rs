@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -23,7 +23,7 @@ pub struct SenderMessageKey {
 
 impl SenderMessageKey {
     pub fn new(iteration: u32, seed: Vec<u8>) -> Result<Self> {
-        let hkdf = HKDF::new(3)?;
+        let hkdf = HKDF::new()?;
         let derived = hkdf.derive_secrets(&seed, b"WhisperGroup", 48)?;
         Ok(Self {
             iteration,

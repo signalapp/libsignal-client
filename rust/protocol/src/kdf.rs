@@ -1,9 +1,11 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-use crate::{Result, SignalProtocolError};
+use crate::{MessageVersion, Result};
+
+use std::default::Default;
 
 use hmac::{Hmac, Mac, NewMac};
 use sha2::Sha256;
@@ -16,17 +18,18 @@ pub struct HKDF {
 impl HKDF {
     const HASH_OUTPUT_SIZE: usize = 32;
 
-    pub fn new(message_version: u32) -> Result<Self> {
+    pub fn new() -> Result<Self> {
+        Self::new_for_version(MessageVersion::default())
+    }
+
+    pub fn new_for_version(message_version: MessageVersion) -> Result<Self> {
         match message_version {
-            2 => Ok(HKDF {
+            MessageVersion::Version2 => Ok(HKDF {
                 iteration_start_offset: 0,
             }),
-            3 => Ok(HKDF {
+            MessageVersion::Version3 => Ok(HKDF {
                 iteration_start_offset: 1,
             }),
-            _ => Err(SignalProtocolError::UnrecognizedMessageVersion(
-                message_version,
-            )),
         }
     }
 
@@ -92,6 +95,7 @@ impl HKDF {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::MessageVersion;
 
     #[test]
     fn test_vector_v3() -> Result<()> {
@@ -109,7 +113,7 @@ mod tests {
             0xec, 0xc4, 0xc5, 0xbf, 0x34, 0x00, 0x72, 0x08, 0xd5, 0xb8, 0x87, 0x18, 0x58, 0x65,
         ];
 
-        let output = HKDF::new(3)?.derive_salted_secrets(&ikm, &salt, &info, okm.len())?;
+        let output = HKDF::new()?.derive_salted_secrets(&ikm, &salt, &info, okm.len())?;
 
         assert_eq!(&okm[..], &output[..]);
 
@@ -151,7 +155,7 @@ mod tests {
             0x3e, 0x87, 0xc1, 0x4c, 0x01, 0xd5, 0xc1, 0xf3, 0x43, 0x4f, 0x1d, 0x87,
         ];
 
-        let output = HKDF::new(3)?.derive_salted_secrets(&ikm, &salt, &info, okm.len())?;
+        let output = HKDF::new()?.derive_salted_secrets(&ikm, &salt, &info, okm.len())?;
 
         assert_eq!(&okm[..], &output[..]);
 
@@ -176,7 +180,12 @@ mod tests {
             0x4a, 0xa9, 0xfd, 0xa8, 0x99, 0xda, 0xeb, 0xec,
         ];
 
-        let output = HKDF::new(2)?.derive_salted_secrets(&ikm, &salt, &info, okm.len())?;
+        let output = HKDF::new_for_version(MessageVersion::Version2)?.derive_salted_secrets(
+            &ikm,
+            &salt,
+            &info,
+            okm.len(),
+        )?;
 
         assert_eq!(&okm[..], &output[..]);
 

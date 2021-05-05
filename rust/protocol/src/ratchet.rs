@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -15,7 +15,7 @@ use crate::{KeyPair, Result, SessionRecord};
 use rand::{CryptoRng, Rng};
 
 fn derive_keys(secret_input: &[u8]) -> Result<(RootKey, ChainKey)> {
-    let kdf = crate::kdf::HKDF::new(3)?;
+    let kdf = crate::kdf::HKDF::new()?;
 
     let secrets = kdf.derive_secrets(secret_input, b"WhisperText", 64)?;
 

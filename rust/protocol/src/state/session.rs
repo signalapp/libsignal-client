@@ -10,9 +10,11 @@ use crate::consts;
 use crate::proto::storage::session_structure;
 use crate::proto::storage::{RecordStructure, SessionStructure};
 use crate::state::{PreKeyId, SignedPreKeyId};
+
 use prost::Message;
 
 use std::collections::VecDeque;
+use std::convert::TryInto;
 
 #[derive(Debug, Clone)]
 pub(crate) struct UnacknowledgedPreKeyMessageItems {
@@ -119,7 +121,7 @@ impl SessionState {
         if self.session.root_key.len() != 32 {
             return Err(SignalProtocolError::InvalidProtobufEncoding);
         }
-        let hkdf = HKDF::new(self.session_version()?)?;
+        let hkdf = HKDF::new_for_version(self.session_version()?.try_into()?)?;
         RootKey::new(hkdf, &self.session.root_key)
     }
 
@@ -198,7 +200,7 @@ impl SessionState {
                     if c.key.len() != 32 {
                         return Err(SignalProtocolError::InvalidProtobufEncoding);
                     }
-                    let hkdf = HKDF::new(self.session_version()?)?;
+                    let hkdf = HKDF::new_for_version(self.session_version()?.try_into()?)?;
                     Ok(Some(ChainKey::new(hkdf, &c.key, c.index)?))
                 }
             },
@@ -268,7 +270,7 @@ impl SessionState {
             SignalProtocolError::InvalidState("get_sender_chain_key", "No chain key".to_owned())
         })?;
 
-        let hkdf = HKDF::new(self.session_version()?)?;
+        let hkdf = HKDF::new_for_version(self.session_version()?.try_into()?)?;
         ChainKey::new(hkdf, &chain_key.key, chain_key.index)
     }
 

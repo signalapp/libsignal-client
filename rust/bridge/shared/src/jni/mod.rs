@@ -83,7 +83,7 @@ fn throw_error(env: &JNIEnv, error: SignalJniError) {
     let error = match error {
         SignalJniError::Signal(SignalProtocolError::ApplicationCallbackError(
             callback,
-            exception,
+            CallbackErrorWrapper(exception),
         )) => {
             // The usual way to write this code would be to match on the result of Error::downcast.
             // However, the "failure" result, which is intended to return the original type back,
@@ -99,7 +99,8 @@ fn throw_error(env: &JNIEnv, error: SignalJniError) {
 
             // Fall through to generic handling below.
             SignalJniError::Signal(SignalProtocolError::ApplicationCallbackError(
-                callback, exception,
+                callback,
+                CallbackErrorWrapper(exception),
             ))
         }
 
@@ -366,7 +367,7 @@ pub fn call_method_checked<'a, O: Into<JObject<'a>>, R: TryFrom<JValue<'a>>>(
 
         Err(SignalProtocolError::ApplicationCallbackError(
             fn_name,
-            Box::new(ThrownException::new(env, throwable)?),
+            CallbackErrorWrapper(Box::new(ThrownException::new(env, throwable)?)),
         )
         .into())
     }

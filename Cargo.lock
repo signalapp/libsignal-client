@@ -855,6 +855,7 @@ dependencies = [
  "sha2",
  "signal-crypto",
  "subtle",
+ "thiserror",
  "uuid",
  "x25519-dalek",
 ]

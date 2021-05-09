@@ -63,7 +63,7 @@ impl IdentityKeyStore for &FfiIdentityKeyStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "get_identity_key_pair",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 
@@ -85,7 +85,7 @@ impl IdentityKeyStore for &FfiIdentityKeyStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "get_local_registration_id",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 
@@ -106,7 +106,9 @@ impl IdentityKeyStore for &FfiIdentityKeyStoreStruct {
             1 => Ok(true),
             r => Err(SignalProtocolError::ApplicationCallbackError(
                 "save_identity",
-                Box::new(CallbackError::check(r).expect("verified non-zero")),
+                CallbackErrorWrapper(Box::new(
+                    CallbackError::check(r).expect("verified non-zero"),
+                )),
             )),
         }
     }
@@ -136,7 +138,9 @@ impl IdentityKeyStore for &FfiIdentityKeyStoreStruct {
             1 => Ok(true),
             r => Err(SignalProtocolError::ApplicationCallbackError(
                 "is_trusted_identity",
-                Box::new(CallbackError::check(r).expect("verified non-zero")),
+                CallbackErrorWrapper(Box::new(
+                    CallbackError::check(r).expect("verified non-zero"),
+                )),
             )),
         }
     }
@@ -153,7 +157,7 @@ impl IdentityKeyStore for &FfiIdentityKeyStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "get_identity",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 
@@ -204,7 +208,7 @@ impl PreKeyStore for &FfiPreKeyStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "load_pre_key",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 
@@ -228,7 +232,7 @@ impl PreKeyStore for &FfiPreKeyStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "store_pre_key",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 
@@ -246,7 +250,7 @@ impl PreKeyStore for &FfiPreKeyStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "remove_pre_key",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 
@@ -289,7 +293,7 @@ impl SignedPreKeyStore for &FfiSignedPreKeyStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "load_signed_pre_key",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 
@@ -314,7 +318,7 @@ impl SignedPreKeyStore for &FfiSignedPreKeyStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "store_signed_pre_key",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 
@@ -357,7 +361,7 @@ impl SessionStore for &FfiSessionStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "load_session",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 
@@ -382,7 +386,7 @@ impl SessionStore for &FfiSessionStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "store_session",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 
@@ -434,7 +438,7 @@ impl SenderKeyStore for &FfiSenderKeyStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "store_sender_key",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 
@@ -460,7 +464,7 @@ impl SenderKeyStore for &FfiSenderKeyStoreStruct {
         if let Some(error) = CallbackError::check(result) {
             return Err(SignalProtocolError::ApplicationCallbackError(
                 "load_sender_key",
-                Box::new(error),
+                CallbackErrorWrapper(Box::new(error)),
             ));
         }
 

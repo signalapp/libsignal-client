@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2020 Signal Messenger, LLC.
+# Copyright (C) 2020-2021 Signal Messenger, LLC.
 # SPDX-License-Identifier: AGPL-3.0-only
 #
 
@@ -28,6 +28,7 @@ hex = "0.4"
 log = "0.4"
 num_enum = "0.5.1"
 uuid = "0.8"
+thiserror = "1.0.24"
 
 [dependencies.curve25519-dalek]
 features = ["serde", "alloc"]

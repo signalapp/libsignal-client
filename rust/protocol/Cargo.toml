@@ -29,6 +29,7 @@ log = "0.4"
 num_enum = "0.5.1"
 uuid = "0.8"
 thiserror = "1.0.24"
+displaydoc = "0.2"
 
 [dependencies.curve25519-dalek]
 features = ["serde", "alloc"]

@@ -5,6 +5,7 @@
 
 use crate::curve::KeyType;
 
+use displaydoc::Display;
 use thiserror::Error;
 
 use std::fmt;
@@ -35,89 +36,89 @@ impl std::error::Error for CallbackErrorWrapper {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Display, Error)]
 pub enum SignalProtocolError {
-    #[error("invalid argument: {}", .0)]
+    /// invalid argument: {0}
     InvalidArgument(String),
-    #[error("invalid state for call to {} to succeed: {}", .0, .1)]
+    /// invalid state for call to {0} to succeed: {1}
     InvalidState(&'static str, String),
 
-    #[error("failed to decode protobuf: {}", .0)]
+    /// failed to decode protobuf: {0}
     ProtobufDecodingError(#[from] prost::DecodeError),
-    #[error("failed to encode protobuf: {}", .0)]
+    /// failed to encode protobuf: {0}
     ProtobufEncodingError(#[from] prost::EncodeError),
-    #[error("protobuf encoding was invalid")]
+    /// protobuf encoding was invalid
     InvalidProtobufEncoding,
 
-    #[error("ciphertext serialized bytes were too short <{}>", .0)]
+    /// ciphertext serialized bytes were too short <{0}>
     CiphertextMessageTooShort(usize),
-    #[error("ciphertext version was too old <{}>", .0)]
+    /// ciphertext version was too old <{0}>
     LegacyCiphertextVersion(u8),
-    #[error("ciphertext version was unrecognized <{}>", .0)]
+    /// ciphertext version was unrecognized <{0}>
     UnrecognizedCiphertextVersion(u8),
-    #[error("unrecognized message version <{}>", .0)]
+    /// unrecognized message version <{0}>
     UnrecognizedMessageVersion(u32),
 
-    #[error("fingerprint identifiers do not match")]
+    /// fingerprint identifiers do not match
     FingerprintIdentifierMismatch,
-    #[error("fingerprint version number mismatch them {} us {}", .0, .1)]
+    /// fingerprint version number mismatch them {0} us {1}
     FingerprintVersionMismatch(u32, u32),
-    #[error("fingerprint parsing error")]
+    /// fingerprint parsing error
     FingerprintParsingError,
 
-    #[error("no key type identifier")]
+    /// no key type identifier
     NoKeyTypeIdentifier,
-    #[error("bad key type <{:#04x}>", .0)]
+    /// bad key type <{0:#04x}>
     BadKeyType(u8),
-    #[error("bad key length <{}> for key with type <{}>", .1, .0)]
+    /// bad key length <{0}> for key with type <{1}>
     BadKeyLength(KeyType, usize),
 
-    #[error("invalid signature detected")]
+    /// invalid signature detected
     SignatureValidationFailed,
 
-    #[error("untrusted identity for address {}", .0)]
+    /// untrusted identity for address {0}
     UntrustedIdentity(crate::ProtocolAddress),
 
-    #[error("invalid prekey identifier")]
+    /// invalid prekey identifier
     InvalidPreKeyId,
-    #[error("invalid signed prekey identifier")]
+    /// invalid signed prekey identifier
     InvalidSignedPreKeyId,
 
-    #[error("invalid root key length <{}>", .0)]
+    /// invalid root key length <{0}>
     InvalidRootKeyLength(usize),
-    #[error("invalid chain key length <{}>", .0)]
+    /// invalid chain key length <{0}>
     InvalidChainKeyLength(usize),
 
-    #[error("invalid MAC key length <{}>", .0)]
+    /// invalid MAC key length <{0}>
     InvalidMacKeyLength(usize),
-    #[error("invalid cipher key length <{}> or nonce length <{}>", .0, .1)]
+    /// invalid cipher key length <{0}> or nonce length <{1}>
     InvalidCipherCryptographicParameters(usize, usize),
-    #[error("invalid ciphertext message")]
+    /// invalid ciphertext message
     InvalidCiphertext,
 
-    #[error("no sender key state")]
+    /// no sender key state
     NoSenderKeyState,
 
-    #[error("session with '{}' not found", .0)]
+    /// session with '{0}' not found
     SessionNotFound(String),
-    #[error("invalid session structure")]
+    /// invalid session structure
     InvalidSessionStructure,
 
-    #[error("message with old counter {} / {}", .0, .1)]
+    /// message with old counter {0} / {1}
     DuplicatedMessage(u32, u32),
-    #[error("invalid message {}", .0)]
+    /// invalid message {0}
     InvalidMessage(&'static str),
-    #[error("internal error {}", .0)]
+    /// internal error {0}
     InternalError(&'static str),
-    #[error("error while invoking an ffi callback: {}", .0)]
+    /// error while invoking an ffi callback: {0}
     FfiBindingError(String),
-    #[error("error in method call '{}': {}", .0, .1)]
+    /// error in method call '{0}': {1}
     ApplicationCallbackError(&'static str, #[source] CallbackErrorWrapper),
 
-    #[error("invalid sealed sender message {}", .0)]
+    /// invalid sealed sender message {0}
     InvalidSealedSenderMessage(String),
-    #[error("unknown sealed sender message version {}", .0)]
+    /// unknown sealed sender message version {0}
     UnknownSealedSenderVersion(u8),
-    #[error("self send of a sealed sender message")]
+    /// self send of a sealed sender message
     SealedSenderSelfSend,
 }

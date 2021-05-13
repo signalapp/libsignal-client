@@ -64,6 +64,6 @@ pub use {
     storage::{
         Context, Direction, IdentityKeyStore, InMemIdentityKeyStore, InMemPreKeyStore,
         InMemSenderKeyStore, InMemSessionStore, InMemSignalProtocolStore, InMemSignedPreKeyStore,
-        PreKeyStore, ProtocolStore, SenderKeyStore, SessionSeed, SessionStore, SignedPreKeyStore,
+        PreKeyStore, ProtocolStore, SenderKeyStore, RegistrationId, SessionStore, SignedPreKeyStore,
     },
 };

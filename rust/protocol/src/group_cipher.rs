@@ -173,7 +173,7 @@ pub async fn process_sender_key_distribution_message(
         .unwrap_or_else(SenderKeyRecord::new_empty);
 
     sender_key_record.add_sender_key_state(
-        skdm.message_version(),
+        skdm.message_version().into(),
         skdm.chain_id()?,
         skdm.iteration()?,
         skdm.chain_key()?,

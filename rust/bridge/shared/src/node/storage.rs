@@ -516,7 +516,7 @@ impl IdentityKeyStore for NodeIdentityKeyStore {
     async fn get_local_registration_id(
         &self,
         _ctx: libsignal_protocol::Context,
-    ) -> Result<SessionSeed, SignalProtocolError> {
+    ) -> Result<RegistrationId, SignalProtocolError> {
         Ok(self
             .do_get_local_registration_id()
             .await

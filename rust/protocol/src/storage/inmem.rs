@@ -5,7 +5,7 @@
 
 use crate::{
     IdentityKey, IdentityKeyPair, PreKeyId, PreKeyRecord, ProtocolAddress, Result, SenderKeyRecord,
-    SessionRecord, SessionSeed, SignalProtocolError, SignedPreKeyId, SignedPreKeyRecord,
+    SessionRecord, RegistrationId, SignalProtocolError, SignedPreKeyId, SignedPreKeyRecord,
 };
 
 use crate::storage::traits;
@@ -19,12 +19,12 @@ use uuid::Uuid;
 #[derive(Clone)]
 pub struct InMemIdentityKeyStore {
     key_pair: IdentityKeyPair,
-    id: SessionSeed,
+    id: RegistrationId,
     known_keys: HashMap<ProtocolAddress, IdentityKey>,
 }
 
 impl InMemIdentityKeyStore {
-    pub fn new(key_pair: IdentityKeyPair, id: SessionSeed) -> Self {
+    pub fn new(key_pair: IdentityKeyPair, id: RegistrationId) -> Self {
         Self {
             key_pair,
             id,
@@ -39,7 +39,7 @@ impl traits::IdentityKeyStore for InMemIdentityKeyStore {
         Ok(self.key_pair)
     }
 
-    async fn get_local_registration_id(&self, _ctx: Context) -> Result<SessionSeed> {
+    async fn get_local_registration_id(&self, _ctx: Context) -> Result<RegistrationId> {
         Ok(self.id)
     }
 
@@ -286,7 +286,7 @@ pub struct InMemSignalProtocolStore {
 }
 
 impl InMemSignalProtocolStore {
-    pub fn new(key_pair: IdentityKeyPair, registration_id: SessionSeed) -> Result<Self> {
+    pub fn new(key_pair: IdentityKeyPair, registration_id: RegistrationId) -> Result<Self> {
         Ok(Self {
             session_store: InMemSessionStore::new(),
             pre_key_store: InMemPreKeyStore::new(),
@@ -303,7 +303,7 @@ impl traits::IdentityKeyStore for InMemSignalProtocolStore {
         self.identity_store.get_identity_key_pair(ctx).await
     }
 
-    async fn get_local_registration_id(&self, ctx: Context) -> Result<SessionSeed> {
+    async fn get_local_registration_id(&self, ctx: Context) -> Result<RegistrationId> {
         self.identity_store.get_local_registration_id(ctx).await
     }
 

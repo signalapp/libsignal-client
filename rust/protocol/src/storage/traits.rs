@@ -22,16 +22,16 @@ pub enum Direction {
 
 /// A locally-generated random number used to construct the initial value of a message chain.
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord)]
-pub struct SessionSeed(u32);
+pub struct RegistrationId(u32);
 
-impl From<u32> for SessionSeed {
+impl From<u32> for RegistrationId {
     fn from(value: u32) -> Self {
         Self(value)
     }
 }
 
-impl From<SessionSeed> for u32 {
-    fn from(value: SessionSeed) -> Self {
+impl From<RegistrationId> for u32 {
+    fn from(value: RegistrationId) -> Self {
         value.0
     }
 }
@@ -40,7 +40,7 @@ impl From<SessionSeed> for u32 {
 pub trait IdentityKeyStore {
     async fn get_identity_key_pair(&self, ctx: Context) -> Result<IdentityKeyPair>;
 
-    async fn get_local_registration_id(&self, ctx: Context) -> Result<SessionSeed>;
+    async fn get_local_registration_id(&self, ctx: Context) -> Result<RegistrationId>;
 
     async fn save_identity(
         &mut self,

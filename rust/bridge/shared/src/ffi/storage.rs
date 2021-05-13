@@ -80,7 +80,7 @@ impl IdentityKeyStore for &FfiIdentityKeyStoreStruct {
     async fn get_local_registration_id(
         &self,
         ctx: Context,
-    ) -> Result<SessionSeed, SignalProtocolError> {
+    ) -> Result<RegistrationId, SignalProtocolError> {
         let ctx = ctx.unwrap_or(std::ptr::null_mut());
         let mut id = 0;
         let result = (self.get_local_registration_id)(self.ctx, &mut id, ctx);

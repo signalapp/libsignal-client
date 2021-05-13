@@ -183,7 +183,7 @@ impl<'a> IdentityKeyStore for JniIdentityKeyStore<'a> {
     async fn get_local_registration_id(
         &self,
         _ctx: Context,
-    ) -> Result<SessionSeed, SignalProtocolError> {
+    ) -> Result<RegistrationId, SignalProtocolError> {
         Ok(self.do_get_local_registration_id()?.into())
     }
 

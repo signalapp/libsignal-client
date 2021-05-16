@@ -9,13 +9,13 @@ mod params;
 pub use self::keys::{ChainKey, MessageKeys, RootKey};
 pub use self::params::{AliceSignalProtocolParameters, BobSignalProtocolParameters};
 use crate::proto::storage::SessionStructure;
-use crate::protocol::CIPHERTEXT_MESSAGE_CURRENT_VERSION;
+use crate::protocol::{MessageVersion, CIPHERTEXT_MESSAGE_CURRENT_VERSION};
 use crate::state::SessionState;
 use crate::{KeyPair, Result, SessionRecord};
 use rand::{CryptoRng, Rng};
 
 fn derive_keys(secret_input: &[u8]) -> Result<(RootKey, ChainKey)> {
-    let kdf = crate::kdf::HKDF::new()?;
+    let kdf = crate::kdf::HKDF::new_for_version(MessageVersion::V3)?;
 
     let secrets = kdf.derive_secrets(secret_input, b"WhisperText", 64)?;
 

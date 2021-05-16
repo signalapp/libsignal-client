@@ -16,10 +16,6 @@ pub struct HKDF {
 impl HKDF {
     const HASH_OUTPUT_SIZE: usize = 32;
 
-    pub fn new() -> Result<Self> {
-        Self::new_for_version(MessageVersion::V3)
-    }
-
     pub fn new_for_version(message_version: MessageVersion) -> Result<Self> {
         match message_version {
             MessageVersion::V2 => Ok(HKDF {
@@ -111,7 +107,7 @@ mod tests {
             0xec, 0xc4, 0xc5, 0xbf, 0x34, 0x00, 0x72, 0x08, 0xd5, 0xb8, 0x87, 0x18, 0x58, 0x65,
         ];
 
-        let output = HKDF::new()?.derive_salted_secrets(&ikm, &salt, &info, okm.len())?;
+        let output = HKDF::new_for_version(MessageVersion::V3)?.derive_salted_secrets(&ikm, &salt, &info, okm.len())?;
 
         assert_eq!(&okm[..], &output[..]);
 
@@ -153,7 +149,7 @@ mod tests {
             0x3e, 0x87, 0xc1, 0x4c, 0x01, 0xd5, 0xc1, 0xf3, 0x43, 0x4f, 0x1d, 0x87,
         ];
 
-        let output = HKDF::new()?.derive_salted_secrets(&ikm, &salt, &info, okm.len())?;
+        let output = HKDF::new_for_version(MessageVersion::V3)?.derive_salted_secrets(&ikm, &salt, &info, okm.len())?;
 
         assert_eq!(&okm[..], &output[..]);
 

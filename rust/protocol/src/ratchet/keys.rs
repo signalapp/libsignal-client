@@ -237,7 +237,7 @@ mod tests {
             0xa2, 0x46, 0xd1, 0x5d,
         ];
 
-        let chain_key = ChainKey::new(HKDF::new()?, &seed, 0)?;
+        let chain_key = ChainKey::new(HKDF::new_for_version(MessageVersion::V3)?, &seed, 0)?;
         assert_eq!(&seed, chain_key.key());
         assert_eq!(&message_key, chain_key.message_keys()?.cipher_key());
         assert_eq!(&mac_key, chain_key.message_keys()?.mac_key());

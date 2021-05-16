@@ -433,7 +433,7 @@ impl SenderKeyMessage {
     const SIGNATURE_LEN: usize = 64;
 
     pub fn new<R: CryptoRng + Rng>(
-        message_version: u8,
+        message_version: MessageVersion,
         distribution_id: Uuid,
         chain_id: u32,
         iteration: u32,
@@ -449,8 +449,9 @@ impl SenderKeyMessage {
         };
         let proto_message_len = proto_message.encoded_len();
         let mut serialized = vec![0u8; 1 + proto_message_len + Self::SIGNATURE_LEN];
+        let message_version_u8: u8 = message_version.into();
         let current_senderkey_version_u8: u8 = SENDERKEY_MESSAGE_CURRENT_VERSION.into();
-        serialized[0] = ((message_version & 0xF) << 4) | current_senderkey_version_u8;
+        serialized[0] = ((message_version_u8 & 0xF) << 4) | current_senderkey_version_u8;
         proto_message.encode(&mut &mut serialized[1..1 + proto_message_len])?;
         let signature =
             signature_key.calculate_signature(&serialized[..1 + proto_message_len], csprng)?;
@@ -727,7 +728,7 @@ mod tests {
         let receiver_identity_key_pair = KeyPair::generate(csprng);
 
         SignalMessage::new(
-            MessageVersion::default(),
+            MessageVersion::V3,
             &mac_key,
             sender_ratchet_key_pair.public_key,
             42,
@@ -764,7 +765,7 @@ mod tests {
         let base_key_pair = KeyPair::generate(&mut csprng);
         let message = create_signal_message(&mut csprng)?;
         let pre_key_signal_message = PreKeySignalMessage::new(
-            MessageVersion::default(),
+            MessageVersion::V3,
             365.into(),
             None,
             97.into(),

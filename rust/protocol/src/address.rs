@@ -11,7 +11,7 @@ use std::fmt;
 /// [crate::SignalMessage] sent to the user will still only go to a single device, so when a user
 /// sends a message to another user at all, they're actually sending a message to *every* device.
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord)]
-pub struct DeviceId(u32);
+pub struct DeviceId(pub u32);
 
 impl From<u32> for DeviceId {
     fn from(value: u32) -> Self {

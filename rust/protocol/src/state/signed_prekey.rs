@@ -9,7 +9,7 @@ use prost::Message;
 
 /// A unique identifier selecting among this client's known signed pre-keys.
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord)]
-pub struct SignedPreKeyId(u32);
+pub struct SignedPreKeyId(pub u32);
 
 impl From<u32> for SignedPreKeyId {
     fn from(value: u32) -> Self {
@@ -23,20 +23,41 @@ impl From<SignedPreKeyId> for u32 {
     }
 }
 
+/// A timestamp assigned when creating a [SignedPreKeyRecord].
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord)]
+pub struct SignedPreKeyTimestamp(pub u64);
+
+impl From<u64> for SignedPreKeyTimestamp {
+    fn from(value: u64) -> Self {
+        Self(value)
+    }
+}
+
+impl From<SignedPreKeyTimestamp> for u64 {
+    fn from(value: SignedPreKeyTimestamp) -> Self {
+        value.0
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SignedPreKeyRecord {
     signed_pre_key: SignedPreKeyRecordStructure,
 }
 
 impl SignedPreKeyRecord {
-    pub fn new(id: SignedPreKeyId, timestamp: u64, key: &KeyPair, signature: &[u8]) -> Self {
+    pub fn new(
+        id: SignedPreKeyId,
+        timestamp: SignedPreKeyTimestamp,
+        key: &KeyPair,
+        signature: &[u8],
+    ) -> Self {
         let public_key = key.public_key.serialize().to_vec();
         let private_key = key.private_key.serialize().to_vec();
         let signature = signature.to_vec();
         Self {
             signed_pre_key: SignedPreKeyRecordStructure {
                 id: id.into(),
-                timestamp,
+                timestamp: timestamp.into(),
                 public_key,
                 private_key,
                 signature,
@@ -54,8 +75,8 @@ impl SignedPreKeyRecord {
         Ok(self.signed_pre_key.id.into())
     }
 
-    pub fn timestamp(&self) -> Result<u64> {
-        Ok(self.signed_pre_key.timestamp)
+    pub fn timestamp(&self) -> Result<SignedPreKeyTimestamp> {
+        Ok(self.signed_pre_key.timestamp.into())
     }
 
     pub fn signature(&self) -> Result<Vec<u8>> {

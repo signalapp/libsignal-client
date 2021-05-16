@@ -15,7 +15,7 @@ use crate::protocol::SENDERKEY_MESSAGE_CURRENT_VERSION;
 use crate::sender_keys::{SenderKeyState, SenderMessageKey};
 
 use rand::{CryptoRng, Rng};
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use uuid::Uuid;
 
 pub async fn group_encrypt<R: Rng + CryptoRng>(
@@ -41,7 +41,7 @@ pub async fn group_encrypt<R: Rng + CryptoRng>(
     let signing_key = sender_key_state.signing_key_private()?;
 
     let skm = SenderKeyMessage::new(
-        sender_key_state.message_version()? as u8,
+        sender_key_state.message_version()?.try_into()?,
         distribution_id,
         sender_key_state.chain_id()?,
         sender_key.iteration()?,

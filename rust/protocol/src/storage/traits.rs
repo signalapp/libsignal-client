@@ -22,7 +22,7 @@ pub enum Direction {
 
 /// A locally-generated random number used to construct the initial value of a message chain.
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord)]
-pub struct RegistrationId(u32);
+pub struct RegistrationId(pub u32);
 
 impl From<u32> for RegistrationId {
     fn from(value: u32) -> Self {

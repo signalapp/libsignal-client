@@ -9,7 +9,7 @@ use prost::Message;
 
 /// A unique identifier selecting among this client's known pre-keys.
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord)]
-pub struct PreKeyId(u32);
+pub struct PreKeyId(pub u32);
 
 impl From<u32> for PreKeyId {
     fn from(value: u32) -> Self {

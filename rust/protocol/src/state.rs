@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -12,4 +12,4 @@ pub use bundle::PreKeyBundle;
 pub use prekey::{PreKeyId, PreKeyRecord};
 pub use session::SessionRecord;
 pub(crate) use session::SessionState;
-pub use signed_prekey::{SignedPreKeyId, SignedPreKeyRecord};
+pub use signed_prekey::{SignedPreKeyId, SignedPreKeyRecord, SignedPreKeyTimestamp};

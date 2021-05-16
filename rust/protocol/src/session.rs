@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020, 2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -184,7 +184,7 @@ pub async fn process_prekey_bundle<R: Rng + CryptoRng>(
 
     session
         .set_local_registration_id(identity_store.get_local_registration_id(ctx).await?.into())?;
-    session.set_remote_registration_id(bundle.registration_id()?)?;
+    session.set_remote_registration_id(bundle.registration_id()?.into())?;
     session.set_alice_base_key(&our_base_key_pair.public_key.serialize())?;
 
     identity_store

@@ -368,7 +368,7 @@ fn SenderKeyMessage_New(
 ) -> Result<SenderKeyMessage> {
     let mut csprng = rand::rngs::OsRng;
     SenderKeyMessage::new(
-        message_version,
+        message_version.try_into()?,
         distribution_id,
         chain_id,
         iteration,
@@ -467,8 +467,8 @@ fn PreKeyBundle_New(
     };
 
     PreKeyBundle::new(
-        registration_id,
-        device_id,
+        registration_id.into(),
+        device_id.into(),
         prekey,
         signed_prekey_id.into(),
         *signed_prekey,
@@ -510,7 +510,7 @@ fn SignedPreKeyRecord_New(
     signature: &[u8],
 ) -> SignedPreKeyRecord {
     let keypair = KeyPair::new(*pub_key, *priv_key);
-    SignedPreKeyRecord::new(id.into(), timestamp, &keypair, &signature)
+    SignedPreKeyRecord::new(id.into(), timestamp.into(), &keypair, &signature)
 }
 
 bridge_deserialize!(PreKeyRecord::deserialize);

@@ -71,7 +71,7 @@ pub async fn create_pre_key_bundle<R: Rng + CryptoRng>(
 
     let pre_key_bundle = PreKeyBundle::new(
         store.get_local_registration_id(None).await?.into(),
-        device_id,
+        device_id.into(),
         Some((pre_key_id.into(), pre_key_pair.public_key)),
         signed_pre_key_id.into(),
         signed_pre_key_pair.public_key,
@@ -87,14 +87,14 @@ pub async fn create_pre_key_bundle<R: Rng + CryptoRng>(
         )
         .await?;
 
-    let timestamp = csprng.gen();
+    let timestamp: u64 = csprng.gen();
 
     store
         .save_signed_pre_key(
             signed_pre_key_id.into(),
             &SignedPreKeyRecord::new(
                 signed_pre_key_id.into(),
-                timestamp,
+                timestamp.into(),
                 &signed_pre_key_pair,
                 &signed_pre_key_signature,
             ),

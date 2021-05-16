@@ -60,10 +60,12 @@ pub use {
     },
     state::{
         PreKeyBundle, PreKeyId, PreKeyRecord, SessionRecord, SignedPreKeyId, SignedPreKeyRecord,
+        SignedPreKeyTimestamp,
     },
     storage::{
         Context, Direction, IdentityKeyStore, InMemIdentityKeyStore, InMemPreKeyStore,
         InMemSenderKeyStore, InMemSessionStore, InMemSignalProtocolStore, InMemSignedPreKeyStore,
-        PreKeyStore, ProtocolStore, SenderKeyStore, RegistrationId, SessionStore, SignedPreKeyStore,
+        PreKeyStore, ProtocolStore, RegistrationId, SenderKeyStore, SessionStore,
+        SignedPreKeyStore,
     },
 };

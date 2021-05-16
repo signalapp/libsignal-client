@@ -8,7 +8,6 @@ use crate::state::{PreKeyId, SignedPreKeyId};
 use crate::{DeviceId, IdentityKey, PrivateKey, PublicKey, Result, SignalProtocolError};
 
 use std::convert::{TryFrom, TryInto};
-use std::default::Default;
 
 use hmac::{Hmac, Mac, NewMac};
 use num_enum::TryFromPrimitiveError;
@@ -18,22 +17,26 @@ use sha2::Sha256;
 use subtle::ConstantTimeEq;
 use uuid::Uuid;
 
-pub const CIPHERTEXT_MESSAGE_CURRENT_VERSION: u8 = 3;
-pub const SENDERKEY_MESSAGE_CURRENT_VERSION: u8 = 3;
+pub const CIPHERTEXT_MESSAGE_CURRENT_VERSION: MessageVersion = MessageVersion::V3;
+pub const SENDERKEY_MESSAGE_CURRENT_VERSION: MessageVersion = MessageVersion::V3;
 
 /// A [u8] describing the version of the message chain format to use when starting a chain.
-#[derive(Copy, Clone, Eq, PartialEq, Debug, num_enum::TryFromPrimitive, num_enum::IntoPrimitive)]
+#[derive(
+    Copy,
+    Clone,
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Debug,
+    num_enum::TryFromPrimitive,
+    num_enum::IntoPrimitive,
+)]
 #[repr(u8)]
 pub enum MessageVersion {
-    Version2 = 2,
+    V2 = 2,
     /// **\[CURRENT\]**.
-    Version3 = CIPHERTEXT_MESSAGE_CURRENT_VERSION,
-}
-
-impl Default for MessageVersion {
-    fn default() -> Self {
-        Self::Version3
-    }
+    V3 = 3,
 }
 
 impl TryFrom<u32> for MessageVersion {
@@ -124,7 +127,8 @@ impl SignalMessage {
         };
         let mut serialized = vec![0u8; 1 + message.encoded_len() + Self::MAC_LENGTH];
         let message_version_u8: u8 = message_version.into();
-        serialized[0] = ((message_version_u8 & 0xF) << 4) | CIPHERTEXT_MESSAGE_CURRENT_VERSION;
+        let current_version_u8: u8 = CIPHERTEXT_MESSAGE_CURRENT_VERSION.into();
+        serialized[0] = ((message_version_u8 & 0xF) << 4) | current_version_u8;
         message.encode(&mut &mut serialized[1..message.encoded_len() + 1])?;
         let msg_len_for_mac = serialized.len() - Self::MAC_LENGTH;
         let mac = Self::compute_mac(
@@ -232,15 +236,15 @@ impl TryFrom<&[u8]> for SignalMessage {
         if value.len() < SignalMessage::MAC_LENGTH + 1 {
             return Err(SignalProtocolError::CiphertextMessageTooShort(value.len()));
         }
-        let message_version = value[0] >> 4;
+        let message_version: MessageVersion = (value[0] >> 4).try_into()?;
         if message_version < CIPHERTEXT_MESSAGE_CURRENT_VERSION {
             return Err(SignalProtocolError::LegacyCiphertextVersion(
-                message_version,
+                message_version.into(),
             ));
         }
         if message_version > CIPHERTEXT_MESSAGE_CURRENT_VERSION {
             return Err(SignalProtocolError::UnrecognizedCiphertextVersion(
-                message_version,
+                message_version.into(),
             ));
         }
 
@@ -303,7 +307,8 @@ impl PreKeySignalMessage {
         };
         let mut serialized = vec![0u8; 1 + proto_message.encoded_len()];
         let message_version_u8: u8 = message_version.into();
-        serialized[0] = ((message_version_u8 & 0xF) << 4) | CIPHERTEXT_MESSAGE_CURRENT_VERSION;
+        let current_version_u8: u8 = CIPHERTEXT_MESSAGE_CURRENT_VERSION.into();
+        serialized[0] = ((message_version_u8 & 0xF) << 4) | current_version_u8;
         proto_message.encode(&mut &mut serialized[1..])?;
         Ok(Self {
             message_version,
@@ -372,15 +377,15 @@ impl TryFrom<&[u8]> for PreKeySignalMessage {
             return Err(SignalProtocolError::CiphertextMessageTooShort(value.len()));
         }
 
-        let message_version = value[0] >> 4;
+        let message_version: MessageVersion = (value[0] >> 4).try_into()?;
         if message_version < CIPHERTEXT_MESSAGE_CURRENT_VERSION {
             return Err(SignalProtocolError::LegacyCiphertextVersion(
-                message_version,
+                message_version.into(),
             ));
         }
         if message_version > CIPHERTEXT_MESSAGE_CURRENT_VERSION {
             return Err(SignalProtocolError::UnrecognizedCiphertextVersion(
-                message_version,
+                message_version.into(),
             ));
         }
 
@@ -402,8 +407,8 @@ impl TryFrom<&[u8]> for PreKeySignalMessage {
         let base_key = PublicKey::deserialize(base_key.as_ref())?;
 
         Ok(PreKeySignalMessage {
-            message_version: message_version.try_into()?,
-            registration_id: (proto_structure.registration_id.unwrap_or(0) as u32).into(),
+            message_version: message_version.into(),
+            registration_id: (proto_structure.registration_id.unwrap_or(0)).into(),
             pre_key_id: proto_structure.pre_key_id.map(|id| id.into()),
             signed_pre_key_id: signed_pre_key_id.into(),
             base_key,
@@ -444,13 +449,14 @@ impl SenderKeyMessage {
         };
         let proto_message_len = proto_message.encoded_len();
         let mut serialized = vec![0u8; 1 + proto_message_len + Self::SIGNATURE_LEN];
-        serialized[0] = ((message_version & 0xF) << 4) | SENDERKEY_MESSAGE_CURRENT_VERSION;
+        let current_senderkey_version_u8: u8 = SENDERKEY_MESSAGE_CURRENT_VERSION.into();
+        serialized[0] = ((message_version & 0xF) << 4) | current_senderkey_version_u8;
         proto_message.encode(&mut &mut serialized[1..1 + proto_message_len])?;
         let signature =
             signature_key.calculate_signature(&serialized[..1 + proto_message_len], csprng)?;
         serialized[1 + proto_message_len..].copy_from_slice(&signature[..]);
         Ok(Self {
-            message_version: MessageVersion::default(),
+            message_version: MessageVersion::V3,
             distribution_id,
             chain_id,
             iteration,
@@ -512,15 +518,15 @@ impl TryFrom<&[u8]> for SenderKeyMessage {
         if value.len() < 1 + Self::SIGNATURE_LEN {
             return Err(SignalProtocolError::CiphertextMessageTooShort(value.len()));
         }
-        let message_version = value[0] >> 4;
+        let message_version: MessageVersion = (value[0] >> 4).try_into()?;
         if message_version < SENDERKEY_MESSAGE_CURRENT_VERSION {
             return Err(SignalProtocolError::LegacyCiphertextVersion(
-                message_version,
+                message_version.into(),
             ));
         }
         if message_version > SENDERKEY_MESSAGE_CURRENT_VERSION {
             return Err(SignalProtocolError::UnrecognizedCiphertextVersion(
-                message_version,
+                message_version.into(),
             ));
         }
         let proto_structure =
@@ -580,7 +586,8 @@ impl SenderKeyDistributionMessage {
             signing_key: Some(signing_key.serialize().to_vec()),
         };
         let mut serialized = vec![0u8; 1 + proto_message.encoded_len()];
-        serialized[0] = ((message_version & 0xF) << 4) | SENDERKEY_MESSAGE_CURRENT_VERSION;
+        let current_senderkey_version_u8: u8 = SENDERKEY_MESSAGE_CURRENT_VERSION.into();
+        serialized[0] = ((message_version & 0xF) << 4) | current_senderkey_version_u8;
         proto_message.encode(&mut &mut serialized[1..])?;
 
         Ok(Self {
@@ -645,16 +652,16 @@ impl TryFrom<&[u8]> for SenderKeyDistributionMessage {
             return Err(SignalProtocolError::CiphertextMessageTooShort(value.len()));
         }
 
-        let message_version = value[0] >> 4;
+        let message_version: MessageVersion = (value[0] >> 4).try_into()?;
 
         if message_version < SENDERKEY_MESSAGE_CURRENT_VERSION {
             return Err(SignalProtocolError::LegacyCiphertextVersion(
-                message_version,
+                message_version.into(),
             ));
         }
         if message_version > SENDERKEY_MESSAGE_CURRENT_VERSION {
             return Err(SignalProtocolError::UnrecognizedCiphertextVersion(
-                message_version,
+                message_version.into(),
             ));
         }
 

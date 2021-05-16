@@ -5,8 +5,6 @@
 
 use crate::{MessageVersion, Result};
 
-use std::default::Default;
-
 use hmac::{Hmac, Mac, NewMac};
 use sha2::Sha256;
 
@@ -19,15 +17,15 @@ impl HKDF {
     const HASH_OUTPUT_SIZE: usize = 32;
 
     pub fn new() -> Result<Self> {
-        Self::new_for_version(MessageVersion::default())
+        Self::new_for_version(MessageVersion::V3)
     }
 
     pub fn new_for_version(message_version: MessageVersion) -> Result<Self> {
         match message_version {
-            MessageVersion::Version2 => Ok(HKDF {
+            MessageVersion::V2 => Ok(HKDF {
                 iteration_start_offset: 0,
             }),
-            MessageVersion::Version3 => Ok(HKDF {
+            MessageVersion::V3 => Ok(HKDF {
                 iteration_start_offset: 1,
             }),
         }
@@ -180,7 +178,7 @@ mod tests {
             0x4a, 0xa9, 0xfd, 0xa8, 0x99, 0xda, 0xeb, 0xec,
         ];
 
-        let output = HKDF::new_for_version(MessageVersion::Version2)?.derive_salted_secrets(
+        let output = HKDF::new_for_version(MessageVersion::V2)?.derive_salted_secrets(
             &ikm,
             &salt,
             &info,

@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -211,7 +211,7 @@ pub async fn create_sender_key_distribution_message<R: Rng + CryptoRng>(
         let sender_key: [u8; 32] = csprng.gen();
         let signing_key = KeyPair::generate(csprng);
         sender_key_record.set_sender_key_state(
-            SENDERKEY_MESSAGE_CURRENT_VERSION,
+            SENDERKEY_MESSAGE_CURRENT_VERSION.into(),
             chain_id,
             iteration,
             &sender_key,

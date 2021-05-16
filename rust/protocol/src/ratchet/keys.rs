@@ -202,7 +202,7 @@ mod tests {
             0xa2, 0x46, 0xd1, 0x5d,
         ];
 
-        let chain_key = ChainKey::new(HKDF::new_for_version(MessageVersion::Version2)?, &seed, 0)?;
+        let chain_key = ChainKey::new(HKDF::new_for_version(MessageVersion::V2)?, &seed, 0)?;
         assert_eq!(&seed, chain_key.key());
         assert_eq!(&message_key, chain_key.message_keys()?.cipher_key());
         assert_eq!(&mac_key, chain_key.message_keys()?.mac_key());
@@ -287,7 +287,7 @@ mod tests {
         let alice_private_key = PrivateKey::deserialize(&alice_private)?;
         let bob_public_key = PublicKey::deserialize(&bob_public)?;
         let root_key = RootKey::new(
-            HKDF::new_for_version(MessageVersion::Version2)?,
+            HKDF::new_for_version(MessageVersion::V2)?,
             &root_key_seed,
         )?;
 

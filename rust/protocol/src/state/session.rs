@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -10,9 +10,11 @@ use crate::consts;
 use crate::proto::storage::session_structure;
 use crate::proto::storage::{RecordStructure, SessionStructure};
 use crate::state::{PreKeyId, SignedPreKeyId};
+
 use prost::Message;
 
 use std::collections::VecDeque;
+use std::convert::TryInto;
 
 #[derive(Debug, Clone)]
 pub(crate) struct UnacknowledgedPreKeyMessageItems {
@@ -119,7 +121,7 @@ impl SessionState {
         if self.session.root_key.len() != 32 {
             return Err(SignalProtocolError::InvalidProtobufEncoding);
         }
-        let hkdf = HKDF::new(self.session_version()?)?;
+        let hkdf = HKDF::new_for_version(self.session_version()?.try_into()?)?;
         RootKey::new(hkdf, &self.session.root_key)
     }
 
@@ -198,7 +200,7 @@ impl SessionState {
                     if c.key.len() != 32 {
                         return Err(SignalProtocolError::InvalidProtobufEncoding);
                     }
-                    let hkdf = HKDF::new(self.session_version()?)?;
+                    let hkdf = HKDF::new_for_version(self.session_version()?.try_into()?)?;
                     Ok(Some(ChainKey::new(hkdf, &c.key, c.index)?))
                 }
             },
@@ -268,7 +270,7 @@ impl SessionState {
             SignalProtocolError::InvalidState("get_sender_chain_key", "No chain key".to_owned())
         })?;
 
-        let hkdf = HKDF::new(self.session_version()?)?;
+        let hkdf = HKDF::new_for_version(self.session_version()?.try_into()?)?;
         ChainKey::new(hkdf, &chain_key.key, chain_key.index)
     }
 
@@ -390,8 +392,9 @@ impl SessionState {
         signed_pre_key_id: SignedPreKeyId,
         base_key: &PublicKey,
     ) -> Result<()> {
+        let signed_pre_key_id: u32 = signed_pre_key_id.into();
         let pending = session_structure::PendingPreKey {
-            pre_key_id: pre_key_id.unwrap_or(0),
+            pre_key_id: pre_key_id.map(|id| id.into()).unwrap_or(0),
             signed_pre_key_id: signed_pre_key_id as i32,
             base_key: base_key.serialize().to_vec(),
         };
@@ -406,9 +409,9 @@ impl SessionState {
             Ok(Some(UnacknowledgedPreKeyMessageItems::new(
                 match pending_pre_key.pre_key_id {
                     0 => None,
-                    v => Some(v),
+                    v => Some(v.into()),
                 },
-                pending_pre_key.signed_pre_key_id as SignedPreKeyId,
+                (pending_pre_key.signed_pre_key_id as u32).into(),
                 PublicKey::deserialize(&pending_pre_key.base_key)?,
             )))
         } else {

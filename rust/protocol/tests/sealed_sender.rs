@@ -89,7 +89,7 @@ fn test_sender_cert() -> Result<(), SignalProtocolError> {
     let server_cert =
         ServerCertificate::new(1, server_key.public_key, &trust_root.private_key, &mut rng)?;
 
-    let device_id = 42;
+    let device_id: DeviceId = 42.into();
     let expires = 1605722925;
 
     let sender_cert = SenderCertificate::new(
@@ -142,8 +142,8 @@ fn test_sealed_sender() -> Result<(), SignalProtocolError> {
     block_on(async {
         let mut rng = OsRng;
 
-        let alice_device_id = 23;
-        let bob_device_id = 42;
+        let alice_device_id: DeviceId = 23.into();
+        let bob_device_id: DeviceId = 42.into();
 
         let alice_e164 = "+14151111111".to_owned();
         let bob_e164 = "+14151114444".to_owned();
@@ -308,8 +308,8 @@ fn test_sender_key_in_sealed_sender() -> Result<(), SignalProtocolError> {
     block_on(async {
         let mut rng = OsRng;
 
-        let alice_device_id = 23;
-        let bob_device_id = 42;
+        let alice_device_id: DeviceId = 23.into();
+        let bob_device_id: DeviceId = 42.into();
 
         let alice_e164 = "+14151111111".to_owned();
 
@@ -318,7 +318,8 @@ fn test_sender_key_in_sealed_sender() -> Result<(), SignalProtocolError> {
 
         let distribution_id = Uuid::from_u128(0xd1d1d1d1_7000_11eb_b32a_33b8a8a487a6);
 
-        let alice_uuid_address = ProtocolAddress::new(alice_uuid.clone(), 1);
+        let device_id: DeviceId = 1.into();
+        let alice_uuid_address = ProtocolAddress::new(alice_uuid.clone(), device_id);
         let bob_uuid_address = ProtocolAddress::new(bob_uuid.clone(), bob_device_id);
 
         let mut alice_store = support::test_in_memory_protocol_store()?;
@@ -431,8 +432,8 @@ fn test_sealed_sender_multi_recipient() -> Result<(), SignalProtocolError> {
     block_on(async {
         let mut rng = OsRng;
 
-        let alice_device_id = 23;
-        let bob_device_id = 42;
+        let alice_device_id: DeviceId = 23.into();
+        let bob_device_id: DeviceId = 42.into();
 
         let alice_e164 = "+14151111111".to_owned();
         let bob_e164 = "+14151114444".to_owned();

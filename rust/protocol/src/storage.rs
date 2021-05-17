@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -13,6 +13,6 @@ pub use {
     },
     traits::{
         Context, Direction, IdentityKeyStore, PreKeyStore, ProtocolStore, SenderKeyStore,
-        SessionStore, SignedPreKeyStore,
+        RegistrationId, SessionStore, SignedPreKeyStore,
     },
 };

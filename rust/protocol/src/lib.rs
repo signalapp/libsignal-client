@@ -29,7 +29,7 @@ mod utils;
 use error::Result;
 
 pub use {
-    address::ProtocolAddress,
+    address::{DeviceId, ProtocolAddress},
     curve::{KeyPair, PrivateKey, PublicKey},
     error::SignalProtocolError,
     fingerprint::{DisplayableFingerprint, Fingerprint, ScannableFingerprint},
@@ -40,7 +40,7 @@ pub use {
     identity_key::{IdentityKey, IdentityKeyPair},
     kdf::HKDF,
     protocol::{
-        CiphertextMessage, CiphertextMessageType, PreKeySignalMessage,
+        CiphertextMessage, CiphertextMessageType, MessageVersion, PreKeySignalMessage,
         SenderKeyDistributionMessage, SenderKeyMessage, SignalMessage,
     },
     ratchet::{
@@ -58,10 +58,14 @@ pub use {
     session_cipher::{
         message_decrypt, message_decrypt_prekey, message_decrypt_signal, message_encrypt,
     },
-    state::{PreKeyBundle, PreKeyRecord, SessionRecord, SignedPreKeyRecord},
+    state::{
+        PreKeyBundle, PreKeyId, PreKeyRecord, SessionRecord, SignedPreKeyId, SignedPreKeyRecord,
+        SignedPreKeyTimestamp,
+    },
     storage::{
         Context, Direction, IdentityKeyStore, InMemIdentityKeyStore, InMemPreKeyStore,
         InMemSenderKeyStore, InMemSessionStore, InMemSignalProtocolStore, InMemSignedPreKeyStore,
-        PreKeyStore, ProtocolStore, SenderKeyStore, SessionStore, SignedPreKeyStore,
+        PreKeyStore, ProtocolStore, RegistrationId, SenderKeyStore, SessionStore,
+        SignedPreKeyStore,
     },
 };

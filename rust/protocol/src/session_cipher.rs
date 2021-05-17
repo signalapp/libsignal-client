@@ -3,17 +3,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+use crate::consts::MAX_FORWARD_JUMPS;
+use crate::crypto;
+use crate::ratchet::{ChainKey, MessageKeys};
+use crate::session;
+use crate::state::SessionState;
 use crate::{
     CiphertextMessage, Context, Direction, IdentityKeyStore, KeyPair, PreKeySignalMessage,
     PreKeyStore, ProtocolAddress, PublicKey, Result, SessionRecord, SessionStore, SignalMessage,
     SignalProtocolError, SignedPreKeyStore,
 };
 
-use crate::consts::MAX_FORWARD_JUMPS;
-use crate::crypto;
-use crate::ratchet::{ChainKey, MessageKeys};
-use crate::session;
-use crate::state::SessionState;
+use std::convert::TryInto;
 
 use rand::{CryptoRng, Rng};
 
@@ -53,11 +54,11 @@ pub async fn message_encrypt(
             remote_address,
             items
                 .pre_key_id()?
-                .map_or_else(|| "<none>".to_string(), |id| id.to_string())
+                .map_or_else(|| "<none>".to_string(), |id| format!("{:?}", id))
         );
 
         let message = SignalMessage::new(
-            session_version,
+            session_version.try_into()?,
             message_keys.mac_key(),
             sender_ephemeral,
             chain_key.index(),
@@ -68,8 +69,8 @@ pub async fn message_encrypt(
         )?;
 
         CiphertextMessage::PreKeySignalMessage(PreKeySignalMessage::new(
-            session_version,
-            local_registration_id,
+            session_version.try_into()?,
+            local_registration_id.into(),
             items.pre_key_id()?,
             items.signed_pre_key_id()?,
             *items.base_key()?,
@@ -78,7 +79,7 @@ pub async fn message_encrypt(
         )?)
     } else {
         CiphertextMessage::SignalMessage(SignalMessage::new(
-            session_version,
+            session_version.try_into()?,
             message_keys.mac_key(),
             sender_ephemeral,
             chain_key.index(),
@@ -475,10 +476,10 @@ fn decrypt_message_with_state<R: Rng + CryptoRng>(
         ));
     }
 
-    let ciphertext_version = ciphertext.message_version() as u32;
-    if ciphertext_version != state.session_version()? {
+    let ciphertext_version: u8 = ciphertext.message_version().into();
+    if ciphertext_version as u32 != state.session_version()? {
         return Err(SignalProtocolError::UnrecognizedMessageVersion(
-            ciphertext_version,
+            ciphertext_version.into(),
         ));
     }
 

@@ -1,27 +1,28 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
 use crate::state::{PreKeyId, SignedPreKeyId};
-use crate::{IdentityKey, PublicKey, Result};
+use crate::{DeviceId, IdentityKey, PublicKey, RegistrationId, Result};
 
 #[derive(Debug, Clone)]
 pub struct PreKeyBundle {
-    registration_id: u32,
-    device_id: u32,
+    registration_id: RegistrationId,
+    device_id: DeviceId,
     pre_key_id: Option<PreKeyId>,
     pre_key_public: Option<PublicKey>,
     signed_pre_key_id: SignedPreKeyId,
     signed_pre_key_public: PublicKey,
+    // TODO: make wrappers for byte strings!
     signed_pre_key_signature: Vec<u8>,
     identity_key: IdentityKey,
 }
 
 impl PreKeyBundle {
     pub fn new(
-        registration_id: u32,
-        device_id: u32,
+        registration_id: RegistrationId,
+        device_id: DeviceId,
         pre_key: Option<(PreKeyId, PublicKey)>,
         signed_pre_key_id: SignedPreKeyId,
         signed_pre_key_public: PublicKey,
@@ -45,11 +46,11 @@ impl PreKeyBundle {
         })
     }
 
-    pub fn registration_id(&self) -> Result<u32> {
+    pub fn registration_id(&self) -> Result<RegistrationId> {
         Ok(self.registration_id)
     }
 
-    pub fn device_id(&self) -> Result<u32> {
+    pub fn device_id(&self) -> Result<DeviceId> {
         Ok(self.device_id)
     }
 

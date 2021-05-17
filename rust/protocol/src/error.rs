@@ -1,10 +1,11 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020, 2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
 use crate::curve::KeyType;
 
+use std::convert::Infallible;
 use std::error::Error;
 use std::fmt;
 use std::panic::UnwindSafe;
@@ -74,6 +75,12 @@ impl Error for SignalProtocolError {
             SignalProtocolError::ApplicationCallbackError(_, e) => Some(e.as_ref()),
             _ => None,
         }
+    }
+}
+
+impl From<Infallible> for SignalProtocolError {
+    fn from(_value: Infallible) -> SignalProtocolError {
+        unreachable!()
     }
 }
 

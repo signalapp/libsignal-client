@@ -4,9 +4,9 @@
 //
 
 use crate::{
-    message_encrypt, CiphertextMessageType, Context, Direction, IdentityKeyStore, KeyPair,
-    PreKeySignalMessage, PreKeyStore, PrivateKey, ProtocolAddress, PublicKey, Result, SessionStore,
-    SignalMessage, SignalProtocolError, SignedPreKeyStore, HKDF,
+    message_encrypt, CiphertextMessageType, Context, DeviceId, Direction, IdentityKeyStore,
+    KeyPair, MessageVersion, PreKeySignalMessage, PreKeyStore, PrivateKey, ProtocolAddress,
+    PublicKey, Result, SessionStore, SignalMessage, SignalProtocolError, SignedPreKeyStore, HKDF,
 };
 
 use crate::crypto;
@@ -150,7 +150,7 @@ impl ServerCertificate {
 pub struct SenderCertificate {
     signer: ServerCertificate,
     key: PublicKey,
-    sender_device_id: u32,
+    sender_device_id: DeviceId,
     sender_uuid: String,
     sender_e164: Option<String>,
     expiration: u64,
@@ -171,9 +171,10 @@ impl SenderCertificate {
         let certificate_data =
             proto::sealed_sender::sender_certificate::Certificate::decode(certificate.as_ref())?;
 
-        let sender_device_id = certificate_data
+        let sender_device_id: DeviceId = certificate_data
             .sender_device
-            .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
+            .ok_or(SignalProtocolError::InvalidProtobufEncoding)?
+            .into();
         let expiration = certificate_data
             .expires
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
@@ -212,7 +213,7 @@ impl SenderCertificate {
         sender_uuid: String,
         sender_e164: Option<String>,
         key: PublicKey,
-        sender_device_id: u32,
+        sender_device_id: DeviceId,
         expiration: u64,
         signer: ServerCertificate,
         signer_key: &PrivateKey,
@@ -221,7 +222,7 @@ impl SenderCertificate {
         let certificate_pb = proto::sealed_sender::sender_certificate::Certificate {
             sender_uuid: Some(sender_uuid.clone()),
             sender_e164: sender_e164.clone(),
-            sender_device: Some(sender_device_id),
+            sender_device: Some(sender_device_id.into()),
             expires: Some(expiration),
             identity_key: Some(key.serialize().to_vec()),
             signer: Some(signer.to_protobuf()?),
@@ -300,7 +301,7 @@ impl SenderCertificate {
         Ok(self.key)
     }
 
-    pub fn sender_device_id(&self) -> Result<u32> {
+    pub fn sender_device_id(&self) -> Result<DeviceId> {
         Ok(self.sender_device_id)
     }
 
@@ -626,7 +627,7 @@ mod sealed_sender_v1 {
             }
 
             let shared_secret = our_private.calculate_agreement(their_public)?;
-            let kdf = HKDF::new(3)?;
+            let kdf = HKDF::new_for_version(MessageVersion::V3)?;
             let derived_values =
                 kdf.derive_salted_secrets(&shared_secret, &ephemeral_salt, &[], 96)?;
 
@@ -661,7 +662,7 @@ mod sealed_sender_v1 {
             salt.extend_from_slice(ctext);
 
             let shared_secret = our_private.calculate_agreement(their_public)?;
-            let kdf = HKDF::new(3)?;
+            let kdf = HKDF::new_for_version(MessageVersion::V3)?;
             // 96 bytes are derived but the first 32 are discarded/unused
             let derived_values = kdf.derive_salted_secrets(&shared_secret, &salt, &[], 96)?;
 
@@ -797,7 +798,7 @@ mod sealed_sender_v2 {
 
     impl DerivedKeys {
         pub(super) fn calculate(m: &[u8]) -> DerivedKeys {
-            let kdf = HKDF::new(3).expect("valid KDF version");
+            let kdf = HKDF::new_for_version(MessageVersion::V3).expect("valid KDF version");
             let r = kdf
                 .derive_secrets(&m, LABEL_R, 64)
                 .expect("valid use of KDF");
@@ -834,7 +835,11 @@ mod sealed_sender_v2 {
         }
         .concat();
 
-        let mut result = HKDF::new(3)?.derive_secrets(&agreement_key_input, LABEL_DH, 32)?;
+        let mut result = HKDF::new_for_version(MessageVersion::V3)?.derive_secrets(
+            &agreement_key_input,
+            LABEL_DH,
+            32,
+        )?;
         result
             .iter_mut()
             .zip(input)
@@ -864,7 +869,11 @@ mod sealed_sender_v2 {
             }
         }
 
-        HKDF::new(3)?.derive_secrets(&agreement_key_input, LABEL_DH_S, 16)
+        HKDF::new_for_version(MessageVersion::V3)?.derive_secrets(
+            &agreement_key_input,
+            LABEL_DH_S,
+            16,
+        )
     }
 }
 
@@ -932,7 +941,8 @@ pub async fn sealed_sender_multi_recipient_encrypt<R: Rng + CryptoRng>(
         )?;
 
         serialized.extend_from_slice(their_uuid.as_bytes());
-        prost::encode_length_delimiter(destination.device_id() as usize, &mut serialized)
+        let device_id: u32 = destination.device_id().into();
+        prost::encode_length_delimiter(device_id as usize, &mut serialized)
             .expect("cannot fail encoding to Vec");
         serialized.extend_from_slice(&c_i);
         serialized.extend_from_slice(&at_i);
@@ -1106,7 +1116,7 @@ pub async fn sealed_sender_decrypt_to_usmc(
 pub struct SealedSenderDecryptionResult {
     pub sender_uuid: String,
     pub sender_e164: Option<String>,
-    pub device_id: u32,
+    pub device_id: DeviceId,
     pub message: Vec<u8>,
 }
 
@@ -1119,7 +1129,7 @@ impl SealedSenderDecryptionResult {
         Ok(self.sender_e164.as_deref())
     }
 
-    pub fn device_id(&self) -> Result<u32> {
+    pub fn device_id(&self) -> Result<DeviceId> {
         Ok(self.device_id)
     }
 
@@ -1135,7 +1145,7 @@ pub async fn sealed_sender_decrypt(
     timestamp: u64,
     local_e164: Option<String>,
     local_uuid: String,
-    local_device_id: u32,
+    local_device_id: DeviceId,
     identity_store: &mut dyn IdentityKeyStore,
     session_store: &mut dyn SessionStore,
     pre_key_store: &mut dyn PreKeyStore,

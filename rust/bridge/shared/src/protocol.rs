@@ -7,7 +7,7 @@ use libsignal_bridge_macros::*;
 use libsignal_protocol::error::Result;
 use libsignal_protocol::*;
 use static_assertions::const_assert_eq;
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use uuid::Uuid;
 
 use crate::support::*;
@@ -41,8 +41,8 @@ fn HKDF_DeriveSecrets<E: Env>(
     label: Option<&[u8]>,
     salt: Option<&[u8]>,
 ) -> Result<E::Buffer> {
-    let kdf = HKDF::new(version)?;
     let label = label.unwrap_or(&[]);
+    let kdf = HKDF::new_for_version(version.try_into()?)?;
     let buffer = match salt {
         Some(salt) => kdf.derive_salted_secrets(ikm, salt, label, output_length as usize)?,
         None => kdf.derive_secrets(ikm, label, output_length as usize)?,
@@ -59,7 +59,7 @@ fn HKDF_Derive(
     label: &[u8],
     salt: &[u8],
 ) -> Result<()> {
-    let kdf = HKDF::new(version)?;
+    let kdf = HKDF::new_for_version(version.try_into()?)?;
     let kdf_output = kdf.derive_salted_secrets(ikm, salt, label, output.len())?;
     output.copy_from_slice(&kdf_output);
     Ok(())
@@ -67,7 +67,7 @@ fn HKDF_Derive(
 
 #[bridge_fn(ffi = "address_new")]
 fn ProtocolAddress_New(name: String, device_id: u32) -> ProtocolAddress {
-    ProtocolAddress::new(name, device_id)
+    ProtocolAddress::new(name, device_id.into())
 }
 
 bridge_deserialize!(PublicKey::deserialize, ffi = publickey, jni = false);
@@ -237,7 +237,7 @@ fn SignalMessage_New(
     receiver_identity_key: &PublicKey,
 ) -> Result<SignalMessage> {
     SignalMessage::new(
-        message_version,
+        message_version.try_into()?,
         mac_key,
         *sender_ratchet_key,
         counter,
@@ -278,10 +278,10 @@ fn PreKeySignalMessage_New(
     signal_message: &SignalMessage,
 ) -> Result<PreKeySignalMessage> {
     PreKeySignalMessage::new(
-        message_version,
-        registration_id,
-        pre_key_id,
-        signed_pre_key_id,
+        message_version.try_into()?,
+        registration_id.into(),
+        pre_key_id.map(|id| id.into()),
+        signed_pre_key_id.into(),
         *base_key,
         IdentityKey::new(*identity_key),
         signal_message.clone(),
@@ -368,7 +368,7 @@ fn SenderKeyMessage_New(
 ) -> Result<SenderKeyMessage> {
     let mut csprng = rand::rngs::OsRng;
     SenderKeyMessage::new(
-        message_version,
+        message_version.try_into()?,
         distribution_id,
         chain_id,
         iteration,
@@ -456,9 +456,9 @@ fn PreKeyBundle_New(
 ) -> Result<PreKeyBundle> {
     let identity_key = IdentityKey::new(*identity_key);
 
-    let prekey = match (prekey, prekey_id) {
+    let prekey: Option<(PreKeyId, PublicKey)> = match (prekey, prekey_id) {
         (None, None) => None,
-        (Some(k), Some(id)) => Some((id, *k)),
+        (Some(k), Some(id)) => Some((id.into(), *k)),
         _ => {
             return Err(SignalProtocolError::InvalidArgument(
                 "Must supply both or neither of prekey and prekey_id".to_owned(),
@@ -467,10 +467,10 @@ fn PreKeyBundle_New(
     };
 
     PreKeyBundle::new(
-        registration_id,
-        device_id,
+        registration_id.into(),
+        device_id.into(),
         prekey,
-        signed_prekey_id,
+        signed_prekey_id.into(),
         *signed_prekey,
         signed_prekey_signature.to_vec(),
         identity_key,
@@ -510,7 +510,7 @@ fn SignedPreKeyRecord_New(
     signature: &[u8],
 ) -> SignedPreKeyRecord {
     let keypair = KeyPair::new(*pub_key, *priv_key);
-    SignedPreKeyRecord::new(id, timestamp, &keypair, &signature)
+    SignedPreKeyRecord::new(id.into(), timestamp.into(), &keypair, &signature)
 }
 
 bridge_deserialize!(PreKeyRecord::deserialize);
@@ -525,7 +525,7 @@ bridge_get!(PreKeyRecord::private_key -> PrivateKey);
 #[bridge_fn]
 fn PreKeyRecord_New(id: u32, pub_key: &PublicKey, priv_key: &PrivateKey) -> PreKeyRecord {
     let keypair = KeyPair::new(*pub_key, *priv_key);
-    PreKeyRecord::new(id, &keypair)
+    PreKeyRecord::new(id.into(), &keypair)
 }
 
 bridge_deserialize!(SenderKeyRecord::deserialize);
@@ -596,7 +596,7 @@ fn SenderCertificate_New(
         sender_uuid,
         sender_e164,
         *sender_key,
-        sender_device_id,
+        sender_device_id.into(),
         expiration,
         signer_cert.clone(),
         signer_key,
@@ -1042,7 +1042,7 @@ async fn SealedSender_DecryptMessage(
         timestamp,
         local_e164,
         local_uuid,
-        local_device_id,
+        local_device_id.into(),
         identity_store,
         session_store,
         prekey_store,

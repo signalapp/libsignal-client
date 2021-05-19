@@ -7,7 +7,6 @@ package org.whispersystems.libsignal.util;
 
 import android.util.Log;
 import android.util.SparseIntArray;
-
 import org.whispersystems.libsignal.logging.SignalProtocolLogger;
 
 public class AndroidSignalProtocolLogger implements SignalProtocolLogger {

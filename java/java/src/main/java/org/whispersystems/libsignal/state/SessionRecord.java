@@ -5,13 +5,14 @@
  */
 package org.whispersystems.libsignal.state;
 
-import java.io.IOException;
 import org.signal.client.internal.Native;
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.IdentityKeyPair;
 import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.ecc.ECKeyPair;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
+
+import java.io.IOException;
 
 /**
  * A SessionRecord encapsulates the state of an ongoing session.

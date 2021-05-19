@@ -1,17 +1,12 @@
 package org.whispersystems.libsignal;
 
 import junit.framework.TestCase;
-
 import org.whispersystems.libsignal.ecc.Curve;
 import org.whispersystems.libsignal.ecc.ECKeyPair;
-import org.whispersystems.libsignal.ecc.ECPublicKey;
-import org.whispersystems.libsignal.ecc.ECPrivateKey;
 import org.whispersystems.libsignal.protocol.CiphertextMessage;
 import org.whispersystems.libsignal.protocol.SignalMessage;
-import org.whispersystems.libsignal.state.SignalProtocolStore;
 import org.whispersystems.libsignal.state.SessionRecord;
-import org.whispersystems.libsignal.util.guava.Optional;
-import org.whispersystems.libsignal.util.Pair;
+import org.whispersystems.libsignal.state.SignalProtocolStore;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;

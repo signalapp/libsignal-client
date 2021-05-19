@@ -1,14 +1,11 @@
 package org.signal.libsignal.metadata.certificate;
 
 import junit.framework.TestCase;
-
+import org.signal.client.internal.Native;
 import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.ecc.Curve;
 import org.whispersystems.libsignal.ecc.ECKeyPair;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
-import org.whispersystems.libsignal.ecc.ECPrivateKey;
-
-import org.signal.client.internal.Native;
 
 import java.util.UUID;
 

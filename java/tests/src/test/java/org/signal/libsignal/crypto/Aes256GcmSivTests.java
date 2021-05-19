@@ -5,11 +5,12 @@
 
 package org.signal.libsignal.crypto;
 
-import java.io.IOException;
 import junit.framework.TestCase;
 import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.InvalidMessageException;
 import org.whispersystems.libsignal.util.Hex;
+
+import java.io.IOException;
 
 public class Aes256GcmSivTests extends TestCase {
 

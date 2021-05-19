@@ -1,7 +1,6 @@
 package org.signal.libsignal.metadata.protocol;
 
 import org.signal.client.internal.Native;
-
 import org.signal.libsignal.metadata.InvalidMetadataMessageException;
 import org.signal.libsignal.metadata.certificate.InvalidCertificateException;
 import org.signal.libsignal.metadata.certificate.SenderCertificate;

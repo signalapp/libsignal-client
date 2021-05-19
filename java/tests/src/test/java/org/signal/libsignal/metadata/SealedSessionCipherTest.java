@@ -1,13 +1,13 @@
 package org.signal.libsignal.metadata;
 
 import junit.framework.TestCase;
-
+import org.signal.client.internal.Native;
 import org.signal.libsignal.metadata.SealedSessionCipher.DecryptionResult;
-import org.signal.libsignal.metadata.protocol.UnidentifiedSenderMessageContent;
 import org.signal.libsignal.metadata.certificate.CertificateValidator;
 import org.signal.libsignal.metadata.certificate.InvalidCertificateException;
 import org.signal.libsignal.metadata.certificate.SenderCertificate;
 import org.signal.libsignal.metadata.certificate.ServerCertificate;
+import org.signal.libsignal.metadata.protocol.UnidentifiedSenderMessageContent;
 import org.whispersystems.libsignal.IdentityKeyPair;
 import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.InvalidMessageException;
@@ -26,11 +26,7 @@ import org.whispersystems.libsignal.protocol.SenderKeyDistributionMessage;
 import org.whispersystems.libsignal.state.PreKeyBundle;
 import org.whispersystems.libsignal.state.PreKeyRecord;
 import org.whispersystems.libsignal.state.SignedPreKeyRecord;
-
-import org.signal.client.internal.Native;
-
 import org.whispersystems.libsignal.util.Hex;
-import org.whispersystems.libsignal.util.Pair;
 import org.whispersystems.libsignal.util.guava.Optional;
 
 import java.util.Arrays;

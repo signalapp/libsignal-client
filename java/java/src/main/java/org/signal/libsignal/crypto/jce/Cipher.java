@@ -5,15 +5,16 @@
 
 package org.signal.libsignal.crypto.jce;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import org.signal.libsignal.crypto.Aes256GcmDecryption;
+import org.signal.libsignal.crypto.Aes256GcmEncryption;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import org.signal.libsignal.crypto.Aes256GcmDecryption;
-import org.signal.libsignal.crypto.Aes256GcmEncryption;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 /*
 This is a rough compatability layer with Java JCE interface. It diverges from

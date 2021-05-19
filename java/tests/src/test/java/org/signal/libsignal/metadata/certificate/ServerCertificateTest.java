@@ -1,12 +1,10 @@
 package org.signal.libsignal.metadata.certificate;
 
 import junit.framework.TestCase;
-
+import org.signal.client.internal.Native;
 import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.ecc.Curve;
 import org.whispersystems.libsignal.ecc.ECKeyPair;
-
-import org.signal.client.internal.Native;
 
 public class ServerCertificateTest extends TestCase {
 

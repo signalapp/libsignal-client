@@ -6,7 +6,6 @@
 package org.whispersystems.libsignal.state;
 
 import org.signal.client.internal.Native;
-import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.ecc.ECKeyPair;
 import org.whispersystems.libsignal.ecc.ECPrivateKey;
 import org.whispersystems.libsignal.ecc.ECPublicKey;

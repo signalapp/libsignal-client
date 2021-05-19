@@ -1,7 +1,5 @@
 package org.whispersystems.libsignal.groups.state;
 
-import org.whispersystems.libsignal.groups.state.SenderKeyRecord;
-import org.whispersystems.libsignal.groups.state.SenderKeyStore;
 import org.whispersystems.libsignal.SignalProtocolAddress;
 import org.whispersystems.libsignal.util.Pair;
 

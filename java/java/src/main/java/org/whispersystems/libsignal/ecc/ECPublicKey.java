@@ -7,6 +7,7 @@
 package org.whispersystems.libsignal.ecc;
 
 import org.signal.client.internal.Native;
+
 import java.util.Arrays;
 
 public class ECPublicKey implements Comparable<ECPublicKey> {

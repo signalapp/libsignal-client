@@ -7,8 +7,6 @@ package org.whispersystems.libsignal.fingerprint;
 
 import org.whispersystems.libsignal.IdentityKey;
 
-import java.util.List;
-
 public interface FingerprintGenerator {
   public Fingerprint createFor(int version,
                                byte[] localStableIdentifier,

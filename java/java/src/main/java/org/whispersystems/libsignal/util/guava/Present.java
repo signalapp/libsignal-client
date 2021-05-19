@@ -16,10 +16,10 @@
 
 package org.whispersystems.libsignal.util.guava;
 
-import static org.whispersystems.libsignal.util.guava.Preconditions.checkNotNull;
-
 import java.util.Collections;
 import java.util.Set;
+
+import static org.whispersystems.libsignal.util.guava.Preconditions.checkNotNull;
 
 /**
  * Implementation of an {@link Optional} containing a reference.

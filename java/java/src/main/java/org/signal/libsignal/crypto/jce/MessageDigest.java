@@ -5,8 +5,9 @@
 
 package org.signal.libsignal.crypto.jce;
 
-import java.security.NoSuchAlgorithmException;
 import org.signal.libsignal.crypto.CryptographicHash;
+
+import java.security.NoSuchAlgorithmException;
 
 public class MessageDigest {
   CryptographicHash hash;

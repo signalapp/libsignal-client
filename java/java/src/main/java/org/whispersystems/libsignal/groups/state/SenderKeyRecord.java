@@ -6,6 +6,7 @@
 package org.whispersystems.libsignal.groups.state;
 
 import org.signal.client.internal.Native;
+
 import java.io.IOException;
 
 /**

@@ -7,14 +7,14 @@
 
 package org.signal.client.internal;
 
-import org.whispersystems.libsignal.protocol.CiphertextMessage;
-import org.whispersystems.libsignal.state.IdentityKeyStore;
-import org.whispersystems.libsignal.state.SessionStore;
-import org.whispersystems.libsignal.state.PreKeyStore;
-import org.whispersystems.libsignal.state.SignedPreKeyStore;
 import org.whispersystems.libsignal.groups.state.SenderKeyStore;
 import org.whispersystems.libsignal.logging.Log;
 import org.whispersystems.libsignal.logging.SignalProtocolLogger;
+import org.whispersystems.libsignal.protocol.CiphertextMessage;
+import org.whispersystems.libsignal.state.IdentityKeyStore;
+import org.whispersystems.libsignal.state.PreKeyStore;
+import org.whispersystems.libsignal.state.SessionStore;
+import org.whispersystems.libsignal.state.SignedPreKeyStore;
 
 import java.io.File;
 import java.io.FileOutputStream;

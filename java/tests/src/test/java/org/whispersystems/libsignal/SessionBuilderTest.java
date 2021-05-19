@@ -1,7 +1,6 @@
 package org.whispersystems.libsignal;
 
 import junit.framework.TestCase;
-
 import org.whispersystems.libsignal.ecc.Curve;
 import org.whispersystems.libsignal.ecc.ECKeyPair;
 import org.whispersystems.libsignal.protocol.CiphertextMessage;

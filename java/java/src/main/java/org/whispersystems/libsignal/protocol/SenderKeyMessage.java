@@ -6,14 +6,11 @@
 package org.whispersystems.libsignal.protocol;
 
 import org.signal.client.internal.Native;
-
-import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.InvalidMessageException;
 import org.whispersystems.libsignal.LegacyMessageException;
 import org.whispersystems.libsignal.ecc.ECPrivateKey;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
 
-import java.text.ParseException;
 import java.util.UUID;
 
 public class SenderKeyMessage implements CiphertextMessage {

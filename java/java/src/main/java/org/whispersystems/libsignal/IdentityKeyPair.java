@@ -6,7 +6,6 @@
 package org.whispersystems.libsignal;
 
 import org.signal.client.internal.Native;
-
 import org.whispersystems.libsignal.ecc.ECPrivateKey;
 
 /**

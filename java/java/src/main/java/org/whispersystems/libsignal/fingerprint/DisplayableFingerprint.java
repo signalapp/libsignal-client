@@ -5,8 +5,6 @@
  */
 package org.whispersystems.libsignal.fingerprint;
 
-import org.signal.client.internal.Native;
-
 public class DisplayableFingerprint {
   private String displayString;
 

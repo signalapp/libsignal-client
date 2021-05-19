@@ -5,10 +5,11 @@
 
 package org.signal.libsignal.crypto.jce;
 
+import org.signal.libsignal.crypto.CryptographicMac;
+
+import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import org.signal.libsignal.crypto.CryptographicMac;
-import javax.crypto.spec.SecretKeySpec;
 
 public class Mac {
 

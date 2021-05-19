@@ -16,11 +16,10 @@
 
 package org.whispersystems.libsignal.util.guava;
 
-import static org.whispersystems.libsignal.util.guava.Preconditions.checkNotNull;
-
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.Set;
+
+import static org.whispersystems.libsignal.util.guava.Preconditions.checkNotNull;
 
 
 /**

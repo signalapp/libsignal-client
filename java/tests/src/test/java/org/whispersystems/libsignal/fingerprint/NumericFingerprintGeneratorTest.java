@@ -1,7 +1,6 @@
 package org.whispersystems.libsignal.fingerprint;
 
 import junit.framework.TestCase;
-
 import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.ecc.Curve;
 import org.whispersystems.libsignal.ecc.ECKeyPair;

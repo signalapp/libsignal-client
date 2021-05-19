@@ -1,7 +1,6 @@
 package org.whispersystems.libsignal.ecc;
 
 import junit.framework.TestCase;
-
 import org.whispersystems.libsignal.InvalidKeyException;
 
 import java.util.Arrays;

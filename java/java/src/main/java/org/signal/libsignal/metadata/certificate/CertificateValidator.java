@@ -1,10 +1,9 @@
 package org.signal.libsignal.metadata.certificate;
 
 import org.signal.client.internal.Native;
-
+import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.ecc.Curve;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
-import org.whispersystems.libsignal.InvalidKeyException;
 
 public class CertificateValidator {
   private final ECPublicKey trustRoot;

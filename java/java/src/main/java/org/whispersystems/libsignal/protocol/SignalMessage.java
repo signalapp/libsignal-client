@@ -7,7 +7,6 @@ package org.whispersystems.libsignal.protocol;
 
 import org.signal.client.internal.Native;
 import org.whispersystems.libsignal.IdentityKey;
-import org.whispersystems.libsignal.InvalidKeyException;
 import org.whispersystems.libsignal.InvalidMessageException;
 import org.whispersystems.libsignal.LegacyMessageException;
 import org.whispersystems.libsignal.ecc.ECPublicKey;

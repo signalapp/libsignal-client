@@ -4,8 +4,8 @@
 //
 
 package org.signal.libsignal.crypto;
+
 import junit.framework.TestCase;
-import org.signal.libsignal.crypto.CryptographicMac;
 import org.whispersystems.libsignal.util.Hex;
 
 public class CryptographicMacTests extends TestCase {

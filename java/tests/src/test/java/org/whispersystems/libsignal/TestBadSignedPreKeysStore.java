@@ -1,6 +1,5 @@
 package org.whispersystems.libsignal;
 
-import org.whispersystems.libsignal.InvalidKeyIdException;
 import org.whispersystems.libsignal.state.SignedPreKeyRecord;
 
 public class TestBadSignedPreKeysStore extends TestInMemorySignalProtocolStore {

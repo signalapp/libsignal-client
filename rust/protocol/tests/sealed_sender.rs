@@ -400,9 +400,10 @@ fn test_sender_key_in_sealed_sender() -> Result<(), SignalProtocolError> {
         )
         .await?;
 
-        let bob_usmc =
-            sealed_sender_decrypt_to_usmc(&alice_ctext, &mut bob_store.identity_store, None)
-                .await?;
+        let bob_usmc = sealed_sender_decrypt_to_usmc(
+            &alice_ctext,
+            &bob_store.identity_store.get_identity_key_pair(None).await?,
+        )?;
 
         assert!(matches!(
             bob_usmc.msg_type()?,

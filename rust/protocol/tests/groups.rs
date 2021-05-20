@@ -340,8 +340,10 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
         let [bob_ctext, carol_ctext] =
             <[_; 2]>::try_from(sealed_sender_multi_recipient_fan_out(&alice_ctext)?).unwrap();
 
-        let bob_usmc =
-            sealed_sender_decrypt_to_usmc(&bob_ctext, &mut bob_store.identity_store, None).await?;
+        let bob_usmc = sealed_sender_decrypt_to_usmc(
+            &bob_ctext,
+            &bob_store.identity_store.get_identity_key_pair(None).await?,
+        )?;
 
         assert_eq!(bob_usmc.sender()?.sender_uuid()?, alice_uuid);
         assert_eq!(bob_usmc.sender()?.sender_e164()?, Some(alice_e164.as_ref()));
@@ -362,9 +364,13 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
             "space camp?"
         );
 
-        let carol_usmc =
-            sealed_sender_decrypt_to_usmc(&carol_ctext, &mut carol_store.identity_store, None)
-                .await?;
+        let carol_usmc = sealed_sender_decrypt_to_usmc(
+            &carol_ctext,
+            &carol_store
+                .identity_store
+                .get_identity_key_pair(None)
+                .await?,
+        )?;
 
         assert_eq!(carol_usmc.serialized()?, bob_usmc.serialized()?);
 

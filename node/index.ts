@@ -1012,7 +1012,7 @@ export abstract class SessionStore implements Native.SessionStore {
 
 export abstract class IdentityKeyStore implements Native.IdentityKeyStore {
   async _getIdentityKey(): Promise<Native.PrivateKey> {
-    const key = await this.getIdentityKey();
+    const key = this.getIdentityKey();
     return key._nativeHandle;
   }
 
@@ -1052,8 +1052,8 @@ export abstract class IdentityKeyStore implements Native.IdentityKeyStore {
     }
   }
 
-  abstract getIdentityKey(): Promise<PrivateKey>;
-  abstract getLocalRegistrationId(): Promise<number>;
+  abstract getIdentityKey(): PrivateKey;
+  abstract getLocalRegistrationId(): number;
   abstract saveIdentity(
     name: ProtocolAddress,
     key: PublicKey
@@ -1365,14 +1365,15 @@ export async function sealedSenderDecryptMessage(
   return SealedSenderDecryptionResult._fromNativeHandle(ssdr);
 }
 
-export async function sealedSenderDecryptToUsmc(
+export function sealedSenderDecryptToUsmc(
   message: Buffer,
   identityStore: IdentityKeyStore
-): Promise<UnidentifiedSenderMessageContent> {
-  const usmc = await NativeImpl.SealedSender_DecryptToUsmc(
+): UnidentifiedSenderMessageContent {
+  const identity = identityStore.getIdentityKey();
+  const usmc = NativeImpl.SealedSender_DecryptToUsmc(
     message,
-    identityStore,
-    null
+    identity,
+    identity.getPublicKey()
   );
   return UnidentifiedSenderMessageContent._fromNativeHandle(usmc);
 }

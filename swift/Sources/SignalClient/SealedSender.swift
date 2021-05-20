@@ -52,19 +52,16 @@ public class UnidentifiedSenderMessageContent: ClonableHandleOwner {
     public init<Bytes: ContiguousBytes>(message sealedSenderMessage: Bytes,
                                         identityStore: IdentityKeyStore,
                                         context: StoreContext) throws {
+        let identity = try identityStore.identityKeyPair(context: context)
         var result: OpaquePointer?
         try sealedSenderMessage.withUnsafeBytes { messageBytes in
-            try context.withOpaquePointer { context in
-                try withIdentityKeyStore(identityStore) { ffiIdentityStore in
-                    try checkError(
-                        signal_sealed_session_cipher_decrypt_to_usmc(
-                            &result,
-                            messageBytes.baseAddress?.assumingMemoryBound(to: UInt8.self),
-                            messageBytes.count,
-                            ffiIdentityStore,
-                            context))
-                }
-            }
+            try checkError(
+                signal_sealed_session_cipher_decrypt_to_usmc(
+                    &result,
+                    messageBytes.baseAddress?.assumingMemoryBound(to: UInt8.self),
+                    messageBytes.count,
+                    identity.privateKey.nativeHandle,
+                    identity.publicKey.nativeHandle))
         }
         super.init(owned: result!)
     }

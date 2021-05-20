@@ -54,11 +54,11 @@ class InMemoryIdentityKeyStore extends SignalClient.IdentityKeyStore {
     this.localRegistrationId = 5;
   }
 
-  async getIdentityKey(): Promise<SignalClient.PrivateKey> {
-    return Promise.resolve(this.identityKey);
+  getIdentityKey(): SignalClient.PrivateKey {
+    return this.identityKey;
   }
-  async getLocalRegistrationId(): Promise<number> {
-    return Promise.resolve(this.localRegistrationId);
+  getLocalRegistrationId(): number {
+    return this.localRegistrationId;
   }
 
   async isTrustedIdentity(

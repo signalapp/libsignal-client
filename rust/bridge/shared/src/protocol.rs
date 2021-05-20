@@ -1014,12 +1014,15 @@ fn SealedSender_MultiRecipientMessageForSingleRecipient<E: Env>(
 }
 
 #[bridge_fn(node = "SealedSender_DecryptToUsmc")]
-async fn SealedSessionCipher_DecryptToUsmc(
+fn SealedSessionCipher_DecryptToUsmc(
     ctext: &[u8],
-    identity_store: &mut dyn IdentityKeyStore,
-    ctx: Context,
+    identity_private: &PrivateKey,
+    identity_public: &PublicKey,
 ) -> Result<UnidentifiedSenderMessageContent> {
-    sealed_sender_decrypt_to_usmc(ctext, identity_store, ctx).await
+    sealed_sender_decrypt_to_usmc(
+        ctext,
+        &IdentityKeyPair::new(IdentityKey::new(*identity_public), *identity_private),
+    )
 }
 
 #[allow(clippy::too_many_arguments)]

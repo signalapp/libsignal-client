@@ -911,8 +911,8 @@ SignalFfiError *signal_sealed_sender_multi_recipient_message_for_single_recipien
 SignalFfiError *signal_sealed_session_cipher_decrypt_to_usmc(SignalUnidentifiedSenderMessageContent **out,
                                                              const unsigned char *ctext,
                                                              size_t ctext_len,
-                                                             const SignalIdentityKeyStore *identity_store,
-                                                             void *ctx);
+                                                             const SignalPrivateKey *identity_private,
+                                                             const SignalPublicKey *identity_public);
 
 SignalFfiError *signal_sender_key_distribution_message_create(SignalSenderKeyDistributionMessage **out,
                                                               const SignalProtocolAddress *sender,

@@ -106,10 +106,14 @@ public class SealedSessionCipher {
       ProtocolInvalidKeyIdException, ProtocolUntrustedIdentityException,
       SelfSendException
   {
+    IdentityKeyPair identity = this.signalProtocolStore.getIdentityKeyPair();
     UnidentifiedSenderMessageContent content;
     try {
       content = new UnidentifiedSenderMessageContent(
-        Native.SealedSessionCipher_DecryptToUsmc(ciphertext, this.signalProtocolStore, null));
+        Native.SealedSessionCipher_DecryptToUsmc(
+          ciphertext,
+          identity.getPrivateKey().nativeHandle(),
+          identity.getPublicKey().nativeHandle()));
       validator.validate(content.getSenderCertificate(), timestamp);
     } catch (Exception e) {
       throw new InvalidMetadataMessageException(e);

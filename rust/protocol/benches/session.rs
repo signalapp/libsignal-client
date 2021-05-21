@@ -19,8 +19,8 @@ pub fn session_encrypt_result(c: &mut Criterion) -> Result<(), SignalProtocolErr
     let mut alice_store = support::test_in_memory_protocol_store()?;
     let mut bob_store = support::test_in_memory_protocol_store()?;
 
-    block_on(alice_store.store_session(&bob_address, &alice_session_record, None))?;
-    block_on(bob_store.store_session(&alice_address, &bob_session_record, None))?;
+    block_on(alice_store.store_session(&bob_address, &alice_session_record))?;
+    block_on(bob_store.store_session(&alice_address, &bob_session_record))?;
 
     let message_to_decrypt = block_on(support::encrypt(
         &mut alice_store,
@@ -85,8 +85,8 @@ pub fn session_encrypt_decrypt_result(c: &mut Criterion) -> Result<(), SignalPro
     let mut alice_store = support::test_in_memory_protocol_store()?;
     let mut bob_store = support::test_in_memory_protocol_store()?;
 
-    block_on(alice_store.store_session(&bob_address, &alice_session_record, None))?;
-    block_on(bob_store.store_session(&alice_address, &bob_session_record, None))?;
+    block_on(alice_store.store_session(&bob_address, &alice_session_record))?;
+    block_on(bob_store.store_session(&alice_address, &bob_session_record))?;
 
     c.bench_function("session encrypt+decrypt 1 way", |b| {
         b.iter(|| {

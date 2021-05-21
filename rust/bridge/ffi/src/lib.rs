@@ -134,7 +134,6 @@ pub unsafe extern "C" fn signal_sealed_session_cipher_decrypt(
             &mut session_store,
             &mut prekey_store,
             &mut signed_prekey_store,
-            Some(ctx),
         ))?;
 
         write_optional_cstr_to(sender_e164, Ok(decrypted.sender_e164))?;

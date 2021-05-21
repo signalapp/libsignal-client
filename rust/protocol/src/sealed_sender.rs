@@ -4,7 +4,7 @@
 //
 
 use crate::{
-    message_encrypt, CiphertextMessageType, Context, Direction, IdentityKeyStore, KeyPair,
+    message_encrypt, CiphertextMessageType, Direction, IdentityKeyStore, KeyPair,
     PreKeySignalMessage, PreKeyStore, PrivateKey, ProtocolAddress, PublicKey, Result, SessionStore,
     SignalMessage, SignalProtocolError, SignedPreKeyStore, HKDF,
 };
@@ -684,10 +684,9 @@ pub async fn sealed_sender_encrypt<R: Rng + CryptoRng>(
     ptext: &[u8],
     session_store: &mut dyn SessionStore,
     identity_store: &mut dyn IdentityKeyStore,
-    ctx: Context,
     rng: &mut R,
 ) -> Result<Vec<u8>> {
-    let message = message_encrypt(ptext, destination, session_store, identity_store, ctx).await?;
+    let message = message_encrypt(ptext, destination, session_store, identity_store).await?;
     let usmc = UnidentifiedSenderMessageContent::new(
         message.message_type(),
         sender_cert.clone(),
@@ -695,19 +694,18 @@ pub async fn sealed_sender_encrypt<R: Rng + CryptoRng>(
         ContentHint::Default,
         None,
     )?;
-    sealed_sender_encrypt_from_usmc(destination, &usmc, identity_store, ctx, rng).await
+    sealed_sender_encrypt_from_usmc(destination, &usmc, identity_store, rng).await
 }
 
 pub async fn sealed_sender_encrypt_from_usmc<R: Rng + CryptoRng>(
     destination: &ProtocolAddress,
     usmc: &UnidentifiedSenderMessageContent,
     identity_store: &mut dyn IdentityKeyStore,
-    ctx: Context,
     rng: &mut R,
 ) -> Result<Vec<u8>> {
-    let our_identity = identity_store.get_identity_key_pair(ctx).await?;
+    let our_identity = identity_store.get_identity_key_pair().await?;
     let their_identity = identity_store
-        .get_identity(destination, ctx)
+        .get_identity(destination)
         .await?
         .ok_or_else(|| SignalProtocolError::SessionNotFound(format!("{}", destination)))?;
 
@@ -872,7 +870,6 @@ pub async fn sealed_sender_multi_recipient_encrypt<R: Rng + CryptoRng>(
     destinations: &[&ProtocolAddress],
     usmc: &UnidentifiedSenderMessageContent,
     identity_store: &mut dyn IdentityKeyStore,
-    ctx: Context,
     rng: &mut R,
 ) -> Result<Vec<u8>> {
     let m: [u8; 32] = rng.gen();
@@ -902,7 +899,7 @@ pub async fn sealed_sender_multi_recipient_encrypt<R: Rng + CryptoRng>(
     prost::encode_length_delimiter(destinations.len(), &mut serialized)
         .expect("cannot fail encoding to Vec");
 
-    let our_identity = identity_store.get_identity_key_pair(ctx).await?;
+    let our_identity = identity_store.get_identity_key_pair().await?;
     for destination in destinations {
         let their_uuid = Uuid::parse_str(destination.name()).map_err(|_| {
             SignalProtocolError::InvalidArgument(format!(
@@ -912,7 +909,7 @@ pub async fn sealed_sender_multi_recipient_encrypt<R: Rng + CryptoRng>(
         })?;
 
         let their_identity = identity_store
-            .get_identity(destination, ctx)
+            .get_identity(destination)
             .await?
             .ok_or_else(|| SignalProtocolError::SessionNotFound(format!("{}", destination)))?;
 
@@ -1001,9 +998,8 @@ pub fn sealed_sender_multi_recipient_fan_out(data: &[u8]) -> Result<Vec<Vec<u8>>
 pub async fn sealed_sender_decrypt_to_usmc(
     ciphertext: &[u8],
     identity_store: &mut dyn IdentityKeyStore,
-    ctx: Context,
 ) -> Result<UnidentifiedSenderMessageContent> {
-    let our_identity = identity_store.get_identity_key_pair(ctx).await?;
+    let our_identity = identity_store.get_identity_key_pair().await?;
 
     match UnidentifiedSenderMessage::deserialize(ciphertext)? {
         UnidentifiedSenderMessage::V1 {
@@ -1144,9 +1140,8 @@ pub async fn sealed_sender_decrypt(
     session_store: &mut dyn SessionStore,
     pre_key_store: &mut dyn PreKeyStore,
     signed_pre_key_store: &mut dyn SignedPreKeyStore,
-    ctx: Context,
 ) -> Result<SealedSenderDecryptionResult> {
-    let usmc = sealed_sender_decrypt_to_usmc(ciphertext, identity_store, ctx).await?;
+    let usmc = sealed_sender_decrypt_to_usmc(ciphertext, identity_store).await?;
 
     if !usmc.sender()?.validate(trust_root, timestamp)? {
         return Err(SignalProtocolError::InvalidSealedSenderMessage(
@@ -1181,7 +1176,6 @@ pub async fn sealed_sender_decrypt(
                 session_store,
                 identity_store,
                 &mut rng,
-                ctx,
             )
             .await?
         }
@@ -1195,7 +1189,6 @@ pub async fn sealed_sender_decrypt(
                 pre_key_store,
                 signed_pre_key_store,
                 &mut rng,
-                ctx,
             )
             .await?
         }

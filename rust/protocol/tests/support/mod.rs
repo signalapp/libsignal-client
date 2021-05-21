@@ -25,7 +25,6 @@ pub async fn encrypt(
         remote_address,
         &mut store.session_store,
         &mut store.identity_store,
-        None,
     )
     .await
 }
@@ -45,7 +44,6 @@ pub async fn decrypt(
         &mut store.pre_key_store,
         &mut store.signed_pre_key_store,
         &mut csprng,
-        None,
     )
     .await
 }
@@ -60,7 +58,7 @@ pub async fn create_pre_key_bundle<R: Rng + CryptoRng>(
 
     let signed_pre_key_public = signed_pre_key_pair.public_key.serialize();
     let signed_pre_key_signature = store
-        .get_identity_key_pair(None)
+        .get_identity_key_pair()
         .await?
         .private_key()
         .calculate_signature(&signed_pre_key_public, &mut csprng)?;
@@ -70,21 +68,17 @@ pub async fn create_pre_key_bundle<R: Rng + CryptoRng>(
     let signed_pre_key_id: u32 = csprng.gen();
 
     let pre_key_bundle = PreKeyBundle::new(
-        store.get_local_registration_id(None).await?,
+        store.get_local_registration_id().await?,
         device_id,
         Some((pre_key_id, pre_key_pair.public_key)),
         signed_pre_key_id,
         signed_pre_key_pair.public_key,
         signed_pre_key_signature.to_vec(),
-        *store.get_identity_key_pair(None).await?.identity_key(),
+        *store.get_identity_key_pair().await?.identity_key(),
     )?;
 
     store
-        .save_pre_key(
-            pre_key_id,
-            &PreKeyRecord::new(pre_key_id, &pre_key_pair),
-            None,
-        )
+        .save_pre_key(pre_key_id, &PreKeyRecord::new(pre_key_id, &pre_key_pair))
         .await?;
 
     let timestamp = csprng.gen();
@@ -98,7 +92,6 @@ pub async fn create_pre_key_bundle<R: Rng + CryptoRng>(
                 &signed_pre_key_pair,
                 &signed_pre_key_signature,
             ),
-            None,
         )
         .await?;
 

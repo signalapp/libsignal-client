@@ -5,7 +5,6 @@
 
 mod support;
 
-use async_trait::async_trait;
 use futures::executor::block_on;
 use libsignal_protocol::*;
 use rand::rngs::OsRng;
@@ -30,80 +29,10 @@ fn group_no_send_session() -> Result<(), SignalProtocolError> {
         distribution_id,
         "space camp?".as_bytes(),
         &mut csprng,
-        None,
     ))
     .is_err());
 
     Ok(())
-}
-
-pub struct ContextUsingSenderKeyStore {
-    store: InMemSenderKeyStore,
-    expected_context: Context,
-}
-
-impl ContextUsingSenderKeyStore {
-    pub fn new(expected_context: Context) -> Self {
-        Self {
-            store: InMemSenderKeyStore::new(),
-            expected_context,
-        }
-    }
-}
-
-#[async_trait(?Send)]
-impl SenderKeyStore for ContextUsingSenderKeyStore {
-    async fn store_sender_key(
-        &mut self,
-        sender: &ProtocolAddress,
-        distribution_id: Uuid,
-        record: &SenderKeyRecord,
-        ctx: Context,
-    ) -> Result<(), SignalProtocolError> {
-        assert_eq!(ctx, self.expected_context);
-        self.store
-            .store_sender_key(sender, distribution_id, record, ctx)
-            .await
-    }
-
-    async fn load_sender_key(
-        &mut self,
-        sender: &ProtocolAddress,
-        distribution_id: Uuid,
-        ctx: Context,
-    ) -> Result<Option<SenderKeyRecord>, SignalProtocolError> {
-        assert_eq!(ctx, self.expected_context);
-        self.store
-            .load_sender_key(sender, distribution_id, ctx)
-            .await
-    }
-}
-
-#[test]
-fn group_using_context_arg() -> Result<(), SignalProtocolError> {
-    block_on(async {
-        let mut csprng = OsRng;
-
-        let sender_address = ProtocolAddress::new("+14159999111".to_owned(), 1);
-        let distribution_id = Uuid::from_u128(0xd1d1d1d1_7000_11eb_b32a_33b8a8a487a6);
-
-        let x = Box::new(1);
-
-        let context = Some(Box::into_raw(x) as _);
-
-        let mut alice_store = ContextUsingSenderKeyStore::new(context);
-
-        let _sent_distribution_message = create_sender_key_distribution_message(
-            &sender_address,
-            distribution_id,
-            &mut alice_store,
-            &mut csprng,
-            context,
-        )
-        .await?;
-
-        Ok(())
-    })
 }
 
 #[test]
@@ -122,7 +51,6 @@ fn group_no_recv_session() -> Result<(), SignalProtocolError> {
             distribution_id,
             &mut alice_store,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -135,7 +63,6 @@ fn group_no_recv_session() -> Result<(), SignalProtocolError> {
             distribution_id,
             "space camp?".as_bytes(),
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -143,7 +70,6 @@ fn group_no_recv_session() -> Result<(), SignalProtocolError> {
             alice_ciphertext.serialized(),
             &mut bob_store,
             &sender_address,
-            None,
         )
         .await;
 
@@ -169,7 +95,6 @@ fn group_basic_encrypt_decrypt() -> Result<(), SignalProtocolError> {
             distribution_id,
             &mut alice_store,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -182,7 +107,6 @@ fn group_basic_encrypt_decrypt() -> Result<(), SignalProtocolError> {
             distribution_id,
             "space camp?".as_bytes(),
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -190,7 +114,6 @@ fn group_basic_encrypt_decrypt() -> Result<(), SignalProtocolError> {
             &sender_address,
             &recv_distribution_message,
             &mut bob_store,
-            None,
         )
         .await?;
 
@@ -198,7 +121,6 @@ fn group_basic_encrypt_decrypt() -> Result<(), SignalProtocolError> {
             alice_ciphertext.serialized(),
             &mut bob_store,
             &sender_address,
-            None,
         )
         .await?;
 
@@ -235,7 +157,7 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
         let mut bob_store = support::test_in_memory_protocol_store()?;
         let mut carol_store = support::test_in_memory_protocol_store()?;
 
-        let alice_pubkey = *alice_store.get_identity_key_pair(None).await?.public_key();
+        let alice_pubkey = *alice_store.get_identity_key_pair().await?.public_key();
 
         let bob_pre_key_bundle = create_pre_key_bundle(&mut bob_store, &mut csprng).await?;
         let carol_pre_key_bundle = create_pre_key_bundle(&mut carol_store, &mut csprng).await?;
@@ -246,7 +168,6 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
             &mut alice_store.identity_store,
             &bob_pre_key_bundle,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -256,7 +177,6 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
             &mut alice_store.identity_store,
             &carol_pre_key_bundle,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -265,7 +185,6 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
             distribution_id,
             &mut alice_store,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -276,14 +195,12 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
             &alice_uuid_address,
             &recv_distribution_message,
             &mut bob_store,
-            None,
         )
         .await?;
         process_sender_key_distribution_message(
             &alice_uuid_address,
             &recv_distribution_message,
             &mut carol_store,
-            None,
         )
         .await?;
 
@@ -316,7 +233,6 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
             distribution_id,
             "space camp?".as_bytes(),
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -332,7 +248,6 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
             &[&bob_uuid_address, &carol_uuid_address],
             &alice_usmc,
             &mut alice_store.identity_store,
-            None,
             &mut csprng,
         )
         .await?;
@@ -341,7 +256,7 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
             <[_; 2]>::try_from(sealed_sender_multi_recipient_fan_out(&alice_ctext)?).unwrap();
 
         let bob_usmc =
-            sealed_sender_decrypt_to_usmc(&bob_ctext, &mut bob_store.identity_store, None).await?;
+            sealed_sender_decrypt_to_usmc(&bob_ctext, &mut bob_store.identity_store).await?;
 
         assert_eq!(bob_usmc.sender()?.sender_uuid()?, alice_uuid);
         assert_eq!(bob_usmc.sender()?.sender_e164()?, Some(alice_e164.as_ref()));
@@ -349,13 +264,8 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
         assert_eq!(bob_usmc.content_hint()?, ContentHint::Supplementary);
         assert_eq!(bob_usmc.group_id()?, Some(&[42][..]));
 
-        let bob_plaintext = group_decrypt(
-            bob_usmc.contents()?,
-            &mut bob_store,
-            &alice_uuid_address,
-            None,
-        )
-        .await?;
+        let bob_plaintext =
+            group_decrypt(bob_usmc.contents()?, &mut bob_store, &alice_uuid_address).await?;
 
         assert_eq!(
             String::from_utf8(bob_plaintext).expect("valid utf8"),
@@ -363,8 +273,7 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
         );
 
         let carol_usmc =
-            sealed_sender_decrypt_to_usmc(&carol_ctext, &mut carol_store.identity_store, None)
-                .await?;
+            sealed_sender_decrypt_to_usmc(&carol_ctext, &mut carol_store.identity_store).await?;
 
         assert_eq!(carol_usmc.serialized()?, bob_usmc.serialized()?);
 
@@ -372,7 +281,6 @@ fn group_sealed_sender() -> Result<(), SignalProtocolError> {
             carol_usmc.contents()?,
             &mut carol_store,
             &alice_uuid_address,
-            None,
         )
         .await?;
 
@@ -401,7 +309,6 @@ fn group_large_messages() -> Result<(), SignalProtocolError> {
             distribution_id,
             &mut alice_store,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -419,7 +326,6 @@ fn group_large_messages() -> Result<(), SignalProtocolError> {
             distribution_id,
             &large_message,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -427,7 +333,6 @@ fn group_large_messages() -> Result<(), SignalProtocolError> {
             &sender_address,
             &recv_distribution_message,
             &mut bob_store,
-            None,
         )
         .await?;
 
@@ -435,7 +340,6 @@ fn group_large_messages() -> Result<(), SignalProtocolError> {
             alice_ciphertext.serialized(),
             &mut bob_store,
             &sender_address,
-            None,
         )
         .await?;
 
@@ -461,7 +365,6 @@ fn group_basic_ratchet() -> Result<(), SignalProtocolError> {
             distribution_id,
             &mut alice_store,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -472,7 +375,6 @@ fn group_basic_ratchet() -> Result<(), SignalProtocolError> {
             &sender_address,
             &recv_distribution_message,
             &mut bob_store,
-            None,
         )
         .await?;
 
@@ -482,7 +384,6 @@ fn group_basic_ratchet() -> Result<(), SignalProtocolError> {
             distribution_id,
             "swim camp".as_bytes(),
             &mut csprng,
-            None,
         )
         .await?;
         let alice_ciphertext2 = group_encrypt(
@@ -491,7 +392,6 @@ fn group_basic_ratchet() -> Result<(), SignalProtocolError> {
             distribution_id,
             "robot camp".as_bytes(),
             &mut csprng,
-            None,
         )
         .await?;
         let alice_ciphertext3 = group_encrypt(
@@ -500,7 +400,6 @@ fn group_basic_ratchet() -> Result<(), SignalProtocolError> {
             distribution_id,
             "ninja camp".as_bytes(),
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -508,7 +407,6 @@ fn group_basic_ratchet() -> Result<(), SignalProtocolError> {
             alice_ciphertext1.serialized(),
             &mut bob_store,
             &sender_address,
-            None,
         )
         .await?;
         assert_eq!(
@@ -521,7 +419,6 @@ fn group_basic_ratchet() -> Result<(), SignalProtocolError> {
                 alice_ciphertext1.serialized(),
                 &mut bob_store,
                 &sender_address,
-                None
             )
             .await,
             Err(SignalProtocolError::DuplicatedMessage(1, 0))
@@ -531,7 +428,6 @@ fn group_basic_ratchet() -> Result<(), SignalProtocolError> {
             alice_ciphertext3.serialized(),
             &mut bob_store,
             &sender_address,
-            None,
         )
         .await?;
         assert_eq!(
@@ -543,7 +439,6 @@ fn group_basic_ratchet() -> Result<(), SignalProtocolError> {
             alice_ciphertext2.serialized(),
             &mut bob_store,
             &sender_address,
-            None,
         )
         .await?;
         assert_eq!(
@@ -571,7 +466,6 @@ fn group_late_join() -> Result<(), SignalProtocolError> {
             distribution_id,
             &mut alice_store,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -585,7 +479,6 @@ fn group_late_join() -> Result<(), SignalProtocolError> {
                 distribution_id,
                 format!("nefarious plotting {}/100", i).as_bytes(),
                 &mut csprng,
-                None,
             )
             .await?;
         }
@@ -595,7 +488,6 @@ fn group_late_join() -> Result<(), SignalProtocolError> {
             &sender_address,
             &recv_distribution_message,
             &mut bob_store,
-            None,
         )
         .await?;
 
@@ -605,7 +497,6 @@ fn group_late_join() -> Result<(), SignalProtocolError> {
             distribution_id,
             "welcome bob".as_bytes(),
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -613,7 +504,6 @@ fn group_late_join() -> Result<(), SignalProtocolError> {
             alice_ciphertext.serialized(),
             &mut bob_store,
             &sender_address,
-            None,
         )
         .await?;
         assert_eq!(
@@ -641,7 +531,6 @@ fn group_out_of_order() -> Result<(), SignalProtocolError> {
             distribution_id,
             &mut alice_store,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -652,7 +541,6 @@ fn group_out_of_order() -> Result<(), SignalProtocolError> {
             &sender_address,
             &recv_distribution_message,
             &mut bob_store,
-            None,
         )
         .await?;
 
@@ -666,7 +554,6 @@ fn group_out_of_order() -> Result<(), SignalProtocolError> {
                     distribution_id,
                     format!("nefarious plotting {:02}/100", i).as_bytes(),
                     &mut csprng,
-                    None,
                 )
                 .await?,
             );
@@ -678,13 +565,7 @@ fn group_out_of_order() -> Result<(), SignalProtocolError> {
 
         for ciphertext in ciphertexts {
             plaintexts.push(
-                group_decrypt(
-                    &ciphertext.serialized(),
-                    &mut bob_store,
-                    &sender_address,
-                    None,
-                )
-                .await?,
+                group_decrypt(&ciphertext.serialized(), &mut bob_store, &sender_address).await?,
             );
         }
 
@@ -718,7 +599,6 @@ fn group_too_far_in_the_future() -> Result<(), SignalProtocolError> {
             distribution_id,
             &mut alice_store,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -729,7 +609,6 @@ fn group_too_far_in_the_future() -> Result<(), SignalProtocolError> {
             &sender_address,
             &recv_distribution_message,
             &mut bob_store,
-            None,
         )
         .await?;
 
@@ -740,7 +619,6 @@ fn group_too_far_in_the_future() -> Result<(), SignalProtocolError> {
                 distribution_id,
                 format!("nefarious plotting {}", i).as_bytes(),
                 &mut csprng,
-                None,
             )
             .await?;
         }
@@ -751,7 +629,6 @@ fn group_too_far_in_the_future() -> Result<(), SignalProtocolError> {
             distribution_id,
             "you got the plan?".as_bytes(),
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -759,7 +636,6 @@ fn group_too_far_in_the_future() -> Result<(), SignalProtocolError> {
             alice_ciphertext.serialized(),
             &mut bob_store,
             &sender_address,
-            None
         )
         .await
         .is_err());
@@ -784,7 +660,6 @@ fn group_message_key_limit() -> Result<(), SignalProtocolError> {
             distribution_id,
             &mut alice_store,
             &mut csprng,
-            None,
         )
         .await?;
 
@@ -795,7 +670,6 @@ fn group_message_key_limit() -> Result<(), SignalProtocolError> {
             &sender_address,
             &recv_distribution_message,
             &mut bob_store,
-            None,
         )
         .await?;
 
@@ -809,7 +683,6 @@ fn group_message_key_limit() -> Result<(), SignalProtocolError> {
                     distribution_id,
                     "too many messages".as_bytes(),
                     &mut csprng,
-                    None,
                 )
                 .await?
                 .serialized()
@@ -819,7 +692,7 @@ fn group_message_key_limit() -> Result<(), SignalProtocolError> {
 
         assert_eq!(
             String::from_utf8(
-                group_decrypt(&ciphertexts[1000], &mut bob_store, &sender_address, None,).await?
+                group_decrypt(&ciphertexts[1000], &mut bob_store, &sender_address).await?
             )
             .expect("valid utf8"),
             "too many messages"
@@ -830,7 +703,6 @@ fn group_message_key_limit() -> Result<(), SignalProtocolError> {
                     &ciphertexts[ciphertexts.len() - 1],
                     &mut bob_store,
                     &sender_address,
-                    None,
                 )
                 .await?
             )
@@ -838,7 +710,7 @@ fn group_message_key_limit() -> Result<(), SignalProtocolError> {
             "too many messages"
         );
         assert!(
-            group_decrypt(&ciphertexts[0], &mut bob_store, &sender_address, None)
+            group_decrypt(&ciphertexts[0], &mut bob_store, &sender_address)
                 .await
                 .is_err()
         );

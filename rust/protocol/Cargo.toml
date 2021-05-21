@@ -41,6 +41,7 @@ u32_backend = ["curve25519-dalek/u32_backend"]
 u64_backend = ["curve25519-dalek/u64_backend"]
 simd_backend = ["curve25519-dalek/simd_backend"]
 nightly = ["curve25519-dalek/nightly"]
+ffi = []
 
 [dev-dependencies]
 criterion = "0.3"

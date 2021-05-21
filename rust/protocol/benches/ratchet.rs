@@ -31,7 +31,6 @@ pub fn ratchet_forward_result(c: &mut Criterion) -> Result<(), SignalProtocolErr
         distribution_id,
         &mut alice_store,
         &mut csprng,
-        None,
     ))?;
 
     let recv_distribution_message =
@@ -41,7 +40,6 @@ pub fn ratchet_forward_result(c: &mut Criterion) -> Result<(), SignalProtocolErr
         &sender_address,
         &recv_distribution_message,
         &mut bob_store,
-        None,
     ))?;
 
     for ratchets in [100, 1000].iter() {
@@ -54,7 +52,6 @@ pub fn ratchet_forward_result(c: &mut Criterion) -> Result<(), SignalProtocolErr
                 distribution_id,
                 format!("nefarious plotting {}", i).as_bytes(),
                 &mut csprng,
-                None,
             ))?;
         }
 
@@ -64,7 +61,6 @@ pub fn ratchet_forward_result(c: &mut Criterion) -> Result<(), SignalProtocolErr
             distribution_id,
             "you got the plan?".as_bytes(),
             &mut csprng,
-            None,
         ))?;
 
         group.bench_function(format!("ratchet {}", ratchets), |b| {
@@ -74,7 +70,6 @@ pub fn ratchet_forward_result(c: &mut Criterion) -> Result<(), SignalProtocolErr
                     alice_ciphertext.serialized(),
                     &mut bob_store,
                     &sender_address,
-                    None,
                 ))
                 .expect("ok");
             })

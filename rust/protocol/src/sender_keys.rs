@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-use crate::consts;
+use crate::consts::limits::{MAX_MESSAGE_KEYS, MAX_SENDER_KEY_STATES};
 use crate::crypto::hmac_sha256;
 use crate::proto::storage as storage_proto;
 use crate::{PrivateKey, PublicKey, Result, SignalProtocolError, HKDF};
@@ -227,7 +227,7 @@ impl SenderKeyState {
         self.state
             .sender_message_keys
             .push(sender_message_key.as_protobuf()?);
-        while self.state.sender_message_keys.len() > consts::MAX_MESSAGE_KEYS {
+        while self.state.sender_message_keys.len() > MAX_MESSAGE_KEYS {
             self.state.sender_message_keys.remove(0);
         }
         Ok(())
@@ -324,7 +324,7 @@ impl SenderKeyRecord {
             signature_private_key,
         )?);
 
-        while self.states.len() > consts::MAX_SENDER_KEY_STATES {
+        while self.states.len() > MAX_SENDER_KEY_STATES {
             self.states.pop_back();
         }
         Ok(())

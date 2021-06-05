@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-use crate::consts;
+use crate::consts::limits::MAX_FORWARD_JUMPS;
 use crate::crypto;
 
 use crate::{
@@ -84,11 +84,11 @@ fn get_sender_key(
     }
 
     let jump = (iteration - current_iteration) as usize;
-    if jump > consts::MAX_FORWARD_JUMPS {
+    if jump > MAX_FORWARD_JUMPS {
         log::error!(
             "SenderKey distribution {} Exceeded future message limit: {}, current iteration: {})",
             distribution_id,
-            consts::MAX_FORWARD_JUMPS,
+            MAX_FORWARD_JUMPS,
             current_iteration
         );
         return Err(SignalProtocolError::InvalidMessage(

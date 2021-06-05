@@ -9,7 +9,7 @@ use crate::{
     SignalProtocolError, SignedPreKeyStore,
 };
 
-use crate::consts::MAX_FORWARD_JUMPS;
+use crate::consts::limits::MAX_FORWARD_JUMPS;
 use crate::crypto;
 use crate::ratchet::{ChainKey, MessageKeys};
 use crate::session;

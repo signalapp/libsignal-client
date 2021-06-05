@@ -72,7 +72,7 @@ impl IdentityKeyStore for &FfiIdentityKeyStoreStruct {
         }
 
         let priv_key = unsafe { Box::from_raw(key) };
-        let pub_key = priv_key.public_key()?;
+        let pub_key = priv_key.public_key();
 
         Ok(IdentityKeyPair::new(IdentityKey::new(pub_key), *priv_key))
     }

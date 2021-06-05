@@ -7,7 +7,10 @@ use libsignal_bridge_macros::*;
 use libsignal_protocol::error::Result;
 use libsignal_protocol::*;
 use static_assertions::const_assert_eq;
-use std::convert::TryFrom;
+use std::{
+    array::TryFromSliceError,
+    convert::{TryFrom, TryInto},
+};
 use uuid::Uuid;
 
 use crate::support::*;
@@ -72,13 +75,13 @@ fn ProtocolAddress_New(name: String, device_id: u32) -> ProtocolAddress {
     ProtocolAddress::new(name, device_id)
 }
 
-bridge_deserialize!(PublicKey::deserialize, ffi = publickey, jni = false);
+bridge_deserialize!(PublicKey::deserialize_result, ffi = publickey, jni = false);
 
 // Alternate implementation to deserialize from an offset.
 #[bridge_fn(ffi = false, node = false)]
 fn ECPublicKey_Deserialize(data: &[u8], offset: u32) -> Result<PublicKey> {
     let offset = offset as usize;
-    PublicKey::deserialize(&data[offset..])
+    PublicKey::deserialize_result(&data[offset..])
 }
 
 bridge_get_bytearray!(
@@ -105,11 +108,20 @@ fn ECPublicKey_Compare(key1: &PublicKey, key2: &PublicKey) -> i32 {
 
 #[bridge_fn(ffi = "publickey_verify", node = "PublicKey_Verify")]
 fn ECPublicKey_Verify(key: &PublicKey, message: &[u8], signature: &[u8]) -> Result<bool> {
-    key.verify_signature(&message, &signature)
+    Ok(key.verify_signature(
+        &message,
+        &signature.try_into().map_err(|_: TryFromSliceError| {
+            SignalProtocolError::BadKeyLength(
+                KeyType::Curve25519,
+                AsymmetricRole::Signature,
+                signature.len(),
+            )
+        })?,
+    ))
 }
 
 bridge_deserialize!(
-    PrivateKey::deserialize,
+    PrivateKey::deserialize_result,
     ffi = privatekey,
     jni = ECPrivateKey
 );
@@ -128,14 +140,14 @@ fn ECPrivateKey_Generate() -> PrivateKey {
 
 #[bridge_fn(ffi = "privatekey_get_public_key", node = "PrivateKey_GetPublicKey")]
 fn ECPrivateKey_GetPublicKey(k: &PrivateKey) -> Result<PublicKey> {
-    k.public_key()
+    Ok(k.public_key())
 }
 
 #[bridge_fn_buffer(ffi = "privatekey_sign", node = "PrivateKey_Sign")]
 fn ECPrivateKey_Sign<T: Env>(env: T, key: &PrivateKey, message: &[u8]) -> Result<T::Buffer> {
     let mut rng = rand::rngs::OsRng;
     let sig = key.calculate_signature(&message, &mut rng)?;
-    Ok(env.buffer(sig.into_vec()))
+    Ok(env.buffer(sig.to_vec()))
 }
 
 #[bridge_fn_buffer(ffi = "privatekey_agree", node = "PrivateKey_Agree")]
@@ -145,7 +157,7 @@ fn ECPrivateKey_Agree<T: Env>(
     public_key: &PublicKey,
 ) -> Result<T::Buffer> {
     let dh_secret = private_key.calculate_agreement(&public_key)?;
-    Ok(env.buffer(dh_secret.into_vec()))
+    Ok(env.buffer(dh_secret.to_vec()))
 }
 
 #[bridge_fn_buffer(ffi = "identitykeypair_serialize")]
@@ -187,8 +199,8 @@ fn NumericFingerprintGenerator_New(
     remote_identifier: &[u8],
     remote_key: &[u8],
 ) -> Result<Fingerprint> {
-    let local_key = IdentityKey::decode(local_key)?;
-    let remote_key = IdentityKey::decode(remote_key)?;
+    let local_key = IdentityKey::new(PublicKey::deserialize_result(&local_key)?);
+    let remote_key = IdentityKey::new(PublicKey::deserialize_result(&remote_key)?);
 
     Fingerprint::new(
         version,
@@ -219,7 +231,7 @@ bridge_deserialize!(SignalMessage::try_from, ffi = message);
 
 #[bridge_fn_buffer(ffi = false, node = false)]
 fn SignalMessage_GetSenderRatchetKey<E: Env>(env: E, m: &SignalMessage) -> E::Buffer {
-    env.buffer(m.sender_ratchet_key().serialize().into_vec())
+    env.buffer(m.sender_ratchet_key().serialize().to_vec())
 }
 
 bridge_get_bytearray!(SignalMessage::body, ffi = "message_get_body");
@@ -313,7 +325,7 @@ bridge_get_bytearray!(
 
 #[bridge_fn_buffer(ffi = false, jni = "PreKeySignalMessage_1GetBaseKey", node = false)]
 fn PreKeySignalMessage_GetBaseKeySerialized<E: Env>(env: E, m: &PreKeySignalMessage) -> E::Buffer {
-    env.buffer(m.base_key().serialize().into_vec())
+    env.buffer(m.base_key().serialize().to_vec())
 }
 
 #[bridge_fn_buffer(ffi = false, jni = "PreKeySignalMessage_1GetIdentityKey", node = false)]
@@ -321,7 +333,7 @@ fn PreKeySignalMessage_GetIdentityKeySerialized<E: Env>(
     env: E,
     m: &PreKeySignalMessage,
 ) -> E::Buffer {
-    env.buffer(m.identity_key().serialize().into_vec())
+    env.buffer(m.identity_key().serialize().to_vec())
 }
 
 #[bridge_fn_buffer(
@@ -382,7 +394,7 @@ fn SenderKeyMessage_New(
 
 #[bridge_fn]
 fn SenderKeyMessage_VerifySignature(skm: &SenderKeyMessage, pubkey: &PublicKey) -> Result<bool> {
-    skm.verify_signature(pubkey)
+    Ok(skm.verify_signature(pubkey))
 }
 
 bridge_deserialize!(SenderKeyDistributionMessage::try_from);
@@ -397,7 +409,7 @@ fn SenderKeyDistributionMessage_GetSignatureKeySerialized<E: Env>(
     env: E,
     m: &SenderKeyDistributionMessage,
 ) -> Result<E::Buffer> {
-    Ok(env.buffer(m.signing_key()?.serialize().into_vec()))
+    Ok(env.buffer(m.signing_key()?.serialize().to_vec()))
 }
 
 bridge_get_bytearray!(
@@ -433,7 +445,13 @@ fn SenderKeyDistributionMessage_New(
         distribution_id,
         chain_id,
         iteration,
-        chainkey.into(),
+        chainkey.try_into().map_err(|_: TryFromSliceError| {
+            SignalProtocolError::BadKeyLength(
+                KeyType::Curve25519,
+                AsymmetricRole::Private,
+                chainkey.len(),
+            )
+        })?,
         *pk,
     )
 }
@@ -526,13 +544,20 @@ fn PreKeyBundle_New(
         }
     };
 
+    let signed_prekey_signature: &[u8; 64] = signed_prekey_signature.try_into().map_err(|_| {
+        SignalProtocolError::BadKeyLength(
+            KeyType::Curve25519,
+            AsymmetricRole::Signature,
+            signed_prekey_signature.len(),
+        )
+    })?;
     PreKeyBundle::new(
         registration_id,
         device_id,
         prekey,
         signed_prekey_id,
         *signed_prekey,
-        signed_prekey_signature.to_vec(),
+        *signed_prekey_signature,
         identity_key,
     )
 }
@@ -568,7 +593,7 @@ fn SignedPreKeyRecord_New(
     pub_key: &PublicKey,
     priv_key: &PrivateKey,
     signature: &[u8],
-) -> SignedPreKeyRecord {
+) -> Result<SignedPreKeyRecord> {
     let keypair = KeyPair::new(*pub_key, *priv_key);
     SignedPreKeyRecord::new(id, timestamp, &keypair, &signature)
 }
@@ -632,7 +657,7 @@ fn SenderCertificate_Validate(
     key: &PublicKey,
     time: u64,
 ) -> Result<bool> {
-    cert.validate(key, time)
+    Ok(cert.validate(key, time))
 }
 
 #[bridge_fn]

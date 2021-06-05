@@ -97,7 +97,7 @@ impl From<&SignalFfiError> for SignalErrorCode {
 
             SignalFfiError::Signal(SignalProtocolError::NoKeyTypeIdentifier)
             | SignalFfiError::Signal(SignalProtocolError::BadKeyType(_))
-            | SignalFfiError::Signal(SignalProtocolError::BadKeyLength(_, _))
+            | SignalFfiError::Signal(SignalProtocolError::BadKeyLength(_, _, _))
             | SignalFfiError::DeviceTransfer(DeviceTransferError::KeyDecodingFailed)
             | SignalFfiError::SignalCrypto(SignalCryptoError::InvalidKeySize) => {
                 SignalErrorCode::InvalidKey

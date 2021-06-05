@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -31,26 +31,27 @@ fn ct_select(mask: u8, a: u8, b: u8) -> u8 {
     b ^ (mask & (a ^ b))
 }
 
-/*
-* If x and y are different lengths, this leaks information about
-* their relative sizes. This is irrelevant as we always invoke it
-* with two inputs of the same size.
-*
-* In addition it will leak the final comparison result, when the
-* integer is translated to the Ordering enum. This seems unavoidable.
-*
-* The primary goal of this function is to not leak any additional
-* information, besides the ordering, about the value of the two keys,
-* say due to an early exit of the loop.
-*
-* It would be possible to instead have this function SHA-256 hash both
-* inputs, then compare the resulting hashes in the usual non-const
-* time way. We avoid this approach at the moment since it is not clear
-* if applications will rely on public key ordering being defined in
-* some particular way or not.
- */
-
-pub(crate) fn constant_time_cmp(x: &[u8], y: &[u8]) -> Ordering {
+/// Compare the contents of `x` and `y` while trying not to leak information to [timing
+/// attacks](https://en.wikipedia.org/wiki/Timing_attack).
+///
+/// The primary goal of this function is to **not leak any additional information, besides the
+/// ordering, about the value of the two keys**, say due to an early exit of the loop.
+///
+/// ### Implementation Notes
+/// #### Leaked Information
+/// 1. If x and y are different lengths, this leaks information about their relative sizes.
+///     - *This is currently irrelevant, as we always invoke it with two inputs of the same size.*
+/// 2. In addition, it will leak the final comparison result, when the integer is translated to the
+///    Ordering enum.
+///     - *This seems unavoidable.*
+///
+/// #### Possible Improvements
+/// - It would be possible to instead have this function SHA-256 hash both
+///   inputs, then compare the resulting hashes in the usual non-constant
+///   time way.
+///     - *We avoid this approach at the moment since it is not clear if applications will rely on
+///       public key ordering being defined in some particular way or not.*
+pub fn constant_time_cmp(x: &[u8], y: &[u8]) -> Ordering {
     if x.len() < y.len() {
         return Ordering::Less;
     }

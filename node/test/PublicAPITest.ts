@@ -1568,7 +1568,7 @@ describe('SignalClient', () => {
 
     assert.throws(() => {
       SignalClient.PrivateKey.deserialize(invalid_key);
-    }, 'bad key length <33> for key with type <Djb>');
+    }, 'bad key length <33> for key with type <Curve25519>');
 
     assert.throws(() => {
       SignalClient.PublicKey.deserialize(invalid_key);

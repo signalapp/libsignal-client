@@ -12,10 +12,10 @@ use sha2::{Digest, Sha512};
 use subtle::ConstantTimeEq;
 use x25519_dalek::{PublicKey, StaticSecret};
 
-const AGREEMENT_LENGTH: usize = 32;
-const PRIVATE_KEY_LENGTH: usize = 32;
-const PUBLIC_KEY_LENGTH: usize = 32;
-const SIGNATURE_LENGTH: usize = 64;
+pub const AGREEMENT_LENGTH: usize = 32;
+pub const PRIVATE_KEY_LENGTH: usize = 32;
+pub const PUBLIC_KEY_LENGTH: usize = 32;
+pub const SIGNATURE_LENGTH: usize = 64;
 
 #[derive(Debug, Clone)]
 pub struct KeyPair {

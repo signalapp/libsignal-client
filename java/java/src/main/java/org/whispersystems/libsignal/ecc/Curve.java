@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013-2016 Open Whisper Systems
+ * Copyright (C) 2013-2021 Open Whisper Systems
  *
  * Licensed according to the LICENSE file in this repository.
  */
@@ -7,7 +7,7 @@ package org.whispersystems.libsignal.ecc;
 import org.whispersystems.libsignal.InvalidKeyException;
 
 public class Curve {
-  public  static final int DJB_TYPE   = 0x05;
+  public static final int CURVE_25519_TYPE   = 0x05;
 
   public static ECKeyPair generateKeyPair() {
     ECPrivateKey privateKey = ECPrivateKey.generate();

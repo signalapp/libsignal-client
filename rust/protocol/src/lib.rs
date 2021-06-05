@@ -22,6 +22,9 @@
 // https://doc.rust-lang.org/rustdoc/what-to-include.html for background.
 // #![warn(missing_docs)]
 
+// Make all doctests fail if they produce any warnings.
+#![doc(test(attr(deny(warnings))))]
+
 mod address;
 mod consts;
 mod crypto;

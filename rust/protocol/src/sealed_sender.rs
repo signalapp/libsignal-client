@@ -586,7 +586,7 @@ impl UnidentifiedSenderMessage {
                 let ephemeral_public_bytes: Vec<u8> = pb
                     .ephemeral_public
                     .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
-                let ephemeral_public: &[u8; 1 + PUBLIC_KEY_LENGTH] =
+                let ephemeral_public: &[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH] =
                     &ephemeral_public_bytes.try_into().map_err(|e: Vec<u8>| {
                         SignalProtocolError::BadKeyLength(curve::KeyType::Curve25519, e.len())
                     })?;

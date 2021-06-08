@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-use crate::curve::curve25519::PUBLIC_KEY_LENGTH;
 use crate::ratchet::{ChainKey, MessageKeys, RootKey};
 use crate::{
     IdentityKey, KeyPair, KeyType, PrivateKey, PublicKey, Result,
@@ -62,7 +61,7 @@ impl SessionState {
         match session.remote_identity_public.len() {
             0 => Ok(None),
             _ => {
-                let key: [u8; 1 + PUBLIC_KEY_LENGTH] = session
+                let key: [u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH] = session
                     .remote_identity_public
                     .clone()
                     .try_into()
@@ -78,7 +77,7 @@ impl SessionState {
     }
 
     fn extract_local_identity_key(session: &SessionStructure) -> Result<IdentityKey> {
-        let key: [u8; 1 + PUBLIC_KEY_LENGTH] = session
+        let key: [u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH] = session
             .local_identity_public
             .clone()
             .try_into()
@@ -149,7 +148,7 @@ impl SessionState {
         Self::extract_remote_identity_key(&self.session)
     }
 
-    pub(crate) fn remote_identity_key_bytes(&self) -> Result<Option<[u8; 1 + PUBLIC_KEY_LENGTH]>> {
+    pub(crate) fn remote_identity_key_bytes(&self) -> Result<Option<[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH]>> {
         Ok(self.remote_identity_key()?.map(|k| k.serialize()))
     }
 
@@ -157,7 +156,7 @@ impl SessionState {
         Self::extract_local_identity_key(&self.session)
     }
 
-    pub(crate) fn local_identity_key_bytes(&self) -> Result<[u8; 1 + PUBLIC_KEY_LENGTH]> {
+    pub(crate) fn local_identity_key_bytes(&self) -> Result<[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH]> {
         Ok(self.local_identity_key()?.serialize())
     }
 
@@ -681,11 +680,11 @@ impl SessionRecord {
         self.session_state()?.session_version()
     }
 
-    pub fn local_identity_key_bytes(&self) -> Result<[u8; 1 + PUBLIC_KEY_LENGTH]> {
+    pub fn local_identity_key_bytes(&self) -> Result<[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH]> {
         self.session_state()?.local_identity_key_bytes()
     }
 
-    pub fn remote_identity_key_bytes(&self) -> Result<Option<[u8; 1 + PUBLIC_KEY_LENGTH]>> {
+    pub fn remote_identity_key_bytes(&self) -> Result<Option<[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH]>> {
         self.session_state()?.remote_identity_key_bytes()
     }
 

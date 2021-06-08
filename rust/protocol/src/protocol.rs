@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-use crate::curve::curve25519::{PRIVATE_KEY_LENGTH, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH};
+use crate::curve::curve25519::{PRIVATE_KEY_LENGTH, SIGNATURE_LENGTH};
 use crate::proto;
 use crate::{IdentityKey, KeyType, PrivateKey, PublicKey, Result, SignalProtocolError};
 
@@ -682,7 +682,7 @@ impl TryFrom<&[u8]> for SenderKeyDistributionMessage {
             &chain_key_bytes.try_into().map_err(|e: Vec<u8>| {
                 SignalProtocolError::BadKeyLength(KeyType::Curve25519, e.len())
             })?;
-        let signing_key: &[u8; 1 + PUBLIC_KEY_LENGTH] =
+        let signing_key: &[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH] =
             &signing_key_bytes.try_into().map_err(|e: Vec<u8>| {
                 SignalProtocolError::BadKeyLength(KeyType::Curve25519, e.len())
             })?;

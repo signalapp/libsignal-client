@@ -98,8 +98,11 @@ impl PublicKey {
         Self { key }
     }
 
+    /// The number of bytes we use in our serialization format for public keys.
+    pub const ENCODED_PUBLIC_KEY_LENGTH: usize = 1 + curve25519::PUBLIC_KEY_LENGTH;
+
     /// Deserialize a public key from a byte slice.
-    pub fn deserialize(value: &[u8; 1 + curve25519::PUBLIC_KEY_LENGTH]) -> Result<Self> {
+    pub fn deserialize(value: &[u8; Self::ENCODED_PUBLIC_KEY_LENGTH]) -> Result<Self> {
         let key_type = KeyType::try_from(value[0])?;
         match key_type {
             KeyType::Curve25519 => Ok(PublicKey {
@@ -115,7 +118,7 @@ impl PublicKey {
     /// Deserialize from an arbitrary slice for the bridge crate.
     pub fn deserialize_result(value: &[u8]) -> Result<Self> {
         // We allow trailing data after the public key (why?)
-        let value: [u8; 1 + curve25519::PUBLIC_KEY_LENGTH] =
+        let value: [u8; Self::ENCODED_PUBLIC_KEY_LENGTH] =
             value
                 .try_into()
                 .map_err(|_: ::std::array::TryFromSliceError| {
@@ -139,9 +142,9 @@ impl PublicKey {
     }
 
     /// Return a byte slice which can be deserialized with [Self::deserialize].
-    pub fn serialize(&self) -> [u8; 1 + curve25519::PUBLIC_KEY_LENGTH] {
-        let mut result: [u8; 1 + curve25519::PUBLIC_KEY_LENGTH] =
-            [0; 1 + curve25519::PUBLIC_KEY_LENGTH];
+    pub fn serialize(&self) -> [u8; Self::ENCODED_PUBLIC_KEY_LENGTH] {
+        let mut result: [u8; Self::ENCODED_PUBLIC_KEY_LENGTH] =
+            [0; Self::ENCODED_PUBLIC_KEY_LENGTH];
         let (key_type, key) = result
             .split_first_mut()
             .expect("`result` is a static array with nonzero size");
@@ -177,10 +180,10 @@ impl From<PublicKeyData> for PublicKey {
     }
 }
 
-impl TryFrom<&[u8; 1 + curve25519::PUBLIC_KEY_LENGTH]> for PublicKey {
+impl TryFrom<&[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH]> for PublicKey {
     type Error = SignalProtocolError;
 
-    fn try_from(value: &[u8; 1 + curve25519::PUBLIC_KEY_LENGTH]) -> Result<Self> {
+    fn try_from(value: &[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH]) -> Result<Self> {
         Self::deserialize(value)
     }
 }
@@ -448,7 +451,7 @@ impl KeyPair {
     /// # }
     ///```
     pub fn from_public_and_private(
-        public_key: &[u8; 1 + curve25519::PUBLIC_KEY_LENGTH],
+        public_key: &[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH],
         private_key: &[u8; curve25519::PRIVATE_KEY_LENGTH],
     ) -> Result<Self> {
         let public_key = PublicKey::try_from(public_key)?;

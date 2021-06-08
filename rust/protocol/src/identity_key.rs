@@ -9,7 +9,6 @@
 
 #![warn(missing_docs)]
 
-use crate::curve::curve25519::PUBLIC_KEY_LENGTH;
 use crate::proto;
 use crate::utils::no_encoding_error;
 use crate::{KeyPair, PrivateKey, PublicKey, Result, SignalProtocolError};
@@ -44,7 +43,7 @@ impl IdentityKey {
 
     /// Return an owned byte slice which can be deserialized with [Self::decode].
     #[inline]
-    pub fn serialize(&self) -> [u8; 1 + PUBLIC_KEY_LENGTH] {
+    pub fn serialize(&self) -> [u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH] {
         self.public_key.serialize()
     }
 
@@ -55,10 +54,10 @@ impl IdentityKey {
     }
 }
 
-impl TryFrom<&[u8; 1 + PUBLIC_KEY_LENGTH]> for IdentityKey {
+impl TryFrom<&[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH]> for IdentityKey {
     type Error = SignalProtocolError;
 
-    fn try_from(value: &[u8; 1 + PUBLIC_KEY_LENGTH]) -> Result<Self> {
+    fn try_from(value: &[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH]) -> Result<Self> {
         IdentityKey::decode(value)
     }
 }

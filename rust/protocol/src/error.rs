@@ -315,3 +315,11 @@ impl fmt::Display for SignalProtocolError {
         }
     }
 }
+
+impl PartialEq for SignalProtocolError {
+    fn eq(&self, other: &Self) -> bool {
+        format!("{:?}", self) == format!("{:?}", other)
+    }
+}
+
+impl Eq for SignalProtocolError {}

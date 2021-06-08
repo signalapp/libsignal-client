@@ -46,6 +46,12 @@ pub struct KeyPair {
 
 impl KeyPair {
     /// Generate a [StaticSecret] and then a [PublicKey] from a [CryptoRng].
+    ///```
+    /// # use libsignal_protocol::curve_unstable::curve25519::*;
+    /// # #[allow(unused_variables)]
+    /// let kp = KeyPair::new(&mut rand::thread_rng());
+    /// # ()
+    ///```
     pub fn new<R>(csprng: &mut R) -> Self
     where
         R: CryptoRng + Rng,
@@ -61,6 +67,14 @@ impl KeyPair {
     /// Do a [DH] key exchange to produce a slice that can be reproduced by another keypair.
     ///
     /// [DH]: https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange
+    ///```
+    /// # use libsignal_protocol::curve_unstable::curve25519::*;
+    /// let kp = KeyPair::new(&mut rand::thread_rng());
+    /// let kp2 = KeyPair::new(&mut rand::thread_rng());
+    /// assert!(
+    ///   kp.calculate_agreement(kp2.public_key()) == kp2.calculate_agreement(kp.public_key()));
+    /// # ()
+    ///```
     pub fn calculate_agreement(
         &self,
         their_public_key: &[u8; PUBLIC_KEY_LENGTH],
@@ -78,6 +92,13 @@ impl KeyPair {
     /// fixed to 0, but rather passed back in the most significant bit of the signature which would
     /// otherwise always be 0. This is for compatibility with the implementation found in
     /// libsignal-protocol-java.
+    ///```
+    /// # use libsignal_protocol::curve_unstable::curve25519::*;
+    /// let kp = KeyPair::new(&mut rand::thread_rng());
+    /// # #[allow(unused_variables)]
+    /// let signature = kp.calculate_signature(&mut rand::thread_rng(), b"hello");
+    /// # ()
+    ///```
     pub fn calculate_signature<R>(&self, csprng: &mut R, message: &[u8]) -> [u8; SIGNATURE_LENGTH]
     where
         R: CryptoRng + Rng,
@@ -122,6 +143,15 @@ impl KeyPair {
 
     /// Verify a signature from [Self::calculate_signature] against another key pair's public key.
     ///
+    ///```
+    /// # fn main() -> Result<(), libsignal_protocol::error::SignalProtocolError> {
+    /// # use libsignal_protocol::curve_unstable::curve25519::*;
+    /// let kp = KeyPair::new(&mut rand::thread_rng());
+    /// let signature = kp.calculate_signature(&mut rand::thread_rng(), b"hello");
+    /// assert!(KeyPair::verify_signature(&kp.public_key(), b"hello", &signature));
+    /// # Ok(())
+    /// # }
+    ///```
     pub fn verify_signature(
         their_public_key: &[u8; PUBLIC_KEY_LENGTH],
         message: &[u8],
@@ -172,6 +202,11 @@ impl KeyPair {
 }
 
 /// Produce the result of [KeyPair::public_key], when given the output of [KeyPair::private_key].
+///```
+/// # use libsignal_protocol::curve_unstable::curve25519::*;
+/// let kp = KeyPair::new(&mut rand::thread_rng());
+/// assert!(kp.public_key() == &derive_public_key(kp.private_key()));
+///```
 pub fn derive_public_key(private_key: &[u8; PRIVATE_KEY_LENGTH]) -> [u8; PUBLIC_KEY_LENGTH] {
     *PublicKey::from(&StaticSecret::from(*private_key)).as_bytes()
 }

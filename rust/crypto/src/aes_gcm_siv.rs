@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -21,8 +21,11 @@ pub struct Aes256GcmSiv {
 }
 
 impl Aes256GcmSiv {
-    pub const NONCE_SIZE: usize = 12;
-    pub const TAG_SIZE: usize = 16;
+    pub const GCM_SIV_TAG_SIZE: usize = 16;
+    pub const GCM_SIV_NONCE_SIZE: usize = 12;
+
+    const TAG_SIZE: usize = Self::GCM_SIV_TAG_SIZE;
+    const NONCE_SIZE: usize = Self::GCM_SIV_NONCE_SIZE;
 
     pub fn new(key: &[u8]) -> Result<Self> {
         Ok(Self {

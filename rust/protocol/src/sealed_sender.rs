@@ -894,7 +894,7 @@ pub async fn sealed_sender_multi_recipient_encrypt<R: Rng + CryptoRng>(
             aes_gcm_siv.encrypt(
                 &mut ciphertext,
                 // There's no nonce because the key is already one-use.
-                &[0; Aes256GcmSiv::NONCE_SIZE],
+                &[0; Aes256GcmSiv::GCM_SIV_NONCE_SIZE],
                 // And there's no associated data.
                 &[],
             )
@@ -1093,7 +1093,7 @@ pub async fn sealed_sender_decrypt_to_usmc(
                 aes_gcm_siv.decrypt_with_appended_tag(
                     &mut message_bytes,
                     // There's no nonce because the key is already one-use.
-                    &[0; Aes256GcmSiv::NONCE_SIZE],
+                    &[0; Aes256GcmSiv::GCM_SIV_NONCE_SIZE],
                     // And there's no associated data.
                     &[],
                 )

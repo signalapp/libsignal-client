@@ -1299,3 +1299,28 @@ fn test_lossless_round_trip() -> Result<()> {
     assert!(sender_certificate.validate(&trust_root.public_key()?, 31336)?);
     Ok(())
 }
+
+#[test]
+fn test_agreement_xor() -> Result<()> {
+    let m: [u8; 32] = (&mut rand::thread_rng()).gen();
+
+    let keys = sealed_sender_v2::DerivedKeys::calculate(&m);
+
+    let a = KeyPair::generate(&mut rand::thread_rng());
+
+    let send_a_b = sealed_sender_v2::apply_agreement_xor(
+        &keys.e,
+        &a.public_key,
+        Direction::Sending,
+        m.as_ref(),
+    )?;
+    let recv_a_b = sealed_sender_v2::apply_agreement_xor(
+        &a.private_key,
+        &keys.e.public_key()?,
+        Direction::Receiving,
+        send_a_b.as_ref(),
+    )?;
+
+    assert_eq!(recv_a_b.as_ref(), m.as_ref());
+    Ok(())
+}

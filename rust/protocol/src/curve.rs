@@ -79,6 +79,22 @@ pub trait Keyed {
     fn key_type(&self) -> KeyType;
 }
 
+/// Types of components of an asymmetric key pair.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub enum AsymmetricRole {
+    /// This error was raised when decoding a [PublicKey].
+    Public,
+    /// This error was raised when decoding a [PrivateKey].
+    Private,
+    /// This error was raised when decoding an HMAC from a method like [crypto::hmac_sha256].
+    Hmac,
+    /// This error was raised when decoding a [signature][curve25519::SIGNATURE_LENGTH].
+    Signature,
+    /// This error was raised when decoding a symmetric cipher key as with
+    /// [crypto::aes_256_ctr_encrypt]
+    SymmetricKey,
+}
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 enum PublicKeyData {
     Curve25519([u8; 32]),
@@ -122,7 +138,11 @@ impl PublicKey {
             value
                 .try_into()
                 .map_err(|_: ::std::array::TryFromSliceError| {
-                    SignalProtocolError::BadKeyLength(KeyType::Curve25519, value.len())
+                    SignalProtocolError::BadKeyLength(
+                        KeyType::Curve25519,
+                        AsymmetricRole::Public,
+                        value.len(),
+                    )
                 })?;
         Self::deserialize(&value)
     }
@@ -266,7 +286,11 @@ impl PrivateKey {
             value
                 .try_into()
                 .map_err(|_: ::std::array::TryFromSliceError| {
-                    SignalProtocolError::BadKeyLength(KeyType::Curve25519, value.len())
+                    SignalProtocolError::BadKeyLength(
+                        KeyType::Curve25519,
+                        AsymmetricRole::Private,
+                        value.len(),
+                    )
                 })?;
         Ok(Self::deserialize(value))
     }

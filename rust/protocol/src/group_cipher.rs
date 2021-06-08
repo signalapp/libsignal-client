@@ -9,8 +9,9 @@ use crate::curve::curve25519::PRIVATE_KEY_LENGTH;
 use crate::protocol::SENDERKEY_MESSAGE_CURRENT_VERSION;
 use crate::sender_keys::{SenderKeyState, SenderMessageKey};
 use crate::{
-    Context, KeyPair, KeyType, ProtocolAddress, Result, SenderKeyDistributionMessage,
-    SenderKeyMessage, SenderKeyRecord, SenderKeyStore, SignalProtocolError,
+    AsymmetricRole, Context, KeyPair, KeyType, ProtocolAddress, Result,
+    SenderKeyDistributionMessage, SenderKeyMessage, SenderKeyRecord, SenderKeyStore,
+    SignalProtocolError,
 };
 
 use rand::{CryptoRng, Rng};
@@ -230,6 +231,7 @@ pub async fn create_sender_key_distribution_message<R: Rng + CryptoRng>(
             .map_err(|_: ::std::convert::Infallible| {
                 SignalProtocolError::BadKeyLength(
                     KeyType::Curve25519,
+                    AsymmetricRole::Private,
                     sender_chain_key.seed().len(),
                 )
             })?;

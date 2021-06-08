@@ -5,7 +5,7 @@
 
 use crate::curve::curve25519::PRIVATE_KEY_LENGTH;
 use crate::proto::storage::PreKeyRecordStructure;
-use crate::{KeyPair, KeyType, PrivateKey, PublicKey, Result, SignalProtocolError};
+use crate::{AsymmetricRole, KeyPair, KeyType, PrivateKey, PublicKey, Result, SignalProtocolError};
 
 use prost::Message;
 
@@ -40,12 +40,20 @@ impl PreKeyRecord {
         } = record.clone();
         let public_key: &[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH] =
             &public_key.try_into().map_err(|e: Vec<u8>| {
-                SignalProtocolError::BadKeyLength(KeyType::Curve25519, e.len())
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::Public,
+                    e.len(),
+                )
             })?;
         let public_key = PublicKey::deserialize(&public_key)?;
         let private_key: &[u8; PRIVATE_KEY_LENGTH] =
             &private_key.try_into().map_err(|e: Vec<u8>| {
-                SignalProtocolError::BadKeyLength(KeyType::Curve25519, e.len())
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::Private,
+                    e.len(),
+                )
             })?;
         let private_key = PrivateKey::deserialize(&private_key);
         Ok(Self {

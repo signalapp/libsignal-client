@@ -5,7 +5,7 @@
 
 use crate::curve::curve25519::SIGNATURE_LENGTH;
 use crate::proto::storage::SignedPreKeyRecordStructure;
-use crate::{KeyPair, KeyType, PrivateKey, PublicKey, Result, SignalProtocolError};
+use crate::{AsymmetricRole, KeyPair, KeyType, PrivateKey, PublicKey, Result, SignalProtocolError};
 use prost::Message;
 use std::convert::TryInto;
 
@@ -31,6 +31,7 @@ impl SignedPreKeyRecord {
             &signature.to_vec().try_into().map_err(|e: Vec<u8>| {
                 SignalProtocolError::BadKeyLength(
                     KeyType::Curve25519,
+                    AsymmetricRole::Signature,
                     e.len(),
                 )
             })?;
@@ -63,6 +64,7 @@ impl SignedPreKeyRecord {
         let signature: &[u8; SIGNATURE_LENGTH] = &signature.try_into().map_err(|e: Vec<u8>| {
             SignalProtocolError::BadKeyLength(
                 KeyType::Curve25519,
+                AsymmetricRole::Signature,
                 e.len(),
             )
         })?;

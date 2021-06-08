@@ -7,7 +7,7 @@
 
 #![warn(missing_docs)]
 
-use crate::curve::KeyType;
+use crate::curve::{AsymmetricRole, KeyType};
 
 #[cfg(doc)]
 pub use crate::{
@@ -100,7 +100,7 @@ pub enum SignalProtocolError {
     ///
     /// Prefer to use static-sized slices in API method signatures and struct fields to minimize the
     /// need to raise this error.
-    BadKeyLength(KeyType, usize),
+    BadKeyLength(KeyType, AsymmetricRole, usize),
 
     /// Raised if signature validation fails for a [SignedPreKeyRecord] or a [SenderKeyMessage].
     SignatureValidationFailed,
@@ -255,8 +255,12 @@ impl fmt::Display for SignalProtocolError {
             }
             SignalProtocolError::NoKeyTypeIdentifier => write!(f, "no key type identifier"),
             SignalProtocolError::BadKeyType(t) => write!(f, "bad key type <{:#04x}>", t),
-            SignalProtocolError::BadKeyLength(t, l) => {
-                write!(f, "bad key length <{:?}> for key with type <{:?}>", l, t)
+            SignalProtocolError::BadKeyLength(t, r, l) => {
+                write!(
+                    f,
+                    "bad key length <{}> for key {:?} with type <{:?}>",
+                    l, r, t
+                )
             }
             SignalProtocolError::InvalidPreKeyId => write!(f, "invalid prekey identifier"),
             SignalProtocolError::InvalidSignedPreKeyId => {

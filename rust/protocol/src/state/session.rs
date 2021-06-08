@@ -5,7 +5,7 @@
 
 use crate::ratchet::{ChainKey, MessageKeys, RootKey};
 use crate::{
-    IdentityKey, KeyPair, KeyType, PrivateKey, PublicKey, Result,
+    AsymmetricRole, IdentityKey, KeyPair, KeyType, PrivateKey, PublicKey, Result,
     SignalProtocolError, HKDF,
 };
 
@@ -68,6 +68,7 @@ impl SessionState {
                     .map_err(|e: Vec<u8>| {
                         SignalProtocolError::BadKeyLength(
                             KeyType::Curve25519,
+                            AsymmetricRole::Public,
                             e.len(),
                         )
                     })?;
@@ -84,6 +85,7 @@ impl SessionState {
             .map_err(|e: Vec<u8>| {
                 SignalProtocolError::BadKeyLength(
                     KeyType::Curve25519,
+                    AsymmetricRole::Public,
                     e.len(),
                 )
             })?;
@@ -99,6 +101,7 @@ impl SessionState {
                         |e: Vec<u8>| {
                             SignalProtocolError::BadKeyLength(
                                 KeyType::Curve25519,
+                                AsymmetricRole::Public,
                                 e.len(),
                             )
                         },
@@ -110,6 +113,7 @@ impl SessionState {
                         .map_err(|e: Vec<u8>| {
                             SignalProtocolError::BadKeyLength(
                                 KeyType::Curve25519,
+                                AsymmetricRole::Private,
                                 e.len(),
                             )
                         })?,

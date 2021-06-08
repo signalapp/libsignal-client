@@ -5,7 +5,9 @@
 
 use crate::curve::curve25519::{PRIVATE_KEY_LENGTH, SIGNATURE_LENGTH};
 use crate::proto;
-use crate::{IdentityKey, KeyType, PrivateKey, PublicKey, Result, SignalProtocolError};
+use crate::{
+    AsymmetricRole, IdentityKey, KeyType, PrivateKey, PublicKey, Result, SignalProtocolError,
+};
 
 #[cfg(doc)]
 use crate::sender_keys::SenderKeyRecord;
@@ -442,7 +444,11 @@ impl SenderKeyMessage {
         let (semi_serialized, signature) = serialized.split_at(serialized.len() - SIGNATURE_LENGTH);
         let signature: Vec<u8> = signature.to_vec();
         let signature: &[u8; SIGNATURE_LENGTH] = &signature.try_into().map_err(|e: Vec<u8>| {
-            SignalProtocolError::BadKeyLength(KeyType::Curve25519, e.len())
+            SignalProtocolError::BadKeyLength(
+                KeyType::Curve25519,
+                AsymmetricRole::Signature,
+                e.len(),
+            )
         })?;
         Ok((
             semi_serialized
@@ -680,11 +686,19 @@ impl TryFrom<&[u8]> for SenderKeyDistributionMessage {
 
         let chain_key: &[u8; PRIVATE_KEY_LENGTH] =
             &chain_key_bytes.try_into().map_err(|e: Vec<u8>| {
-                SignalProtocolError::BadKeyLength(KeyType::Curve25519, e.len())
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::Private,
+                    e.len(),
+                )
             })?;
         let signing_key: &[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH] =
             &signing_key_bytes.try_into().map_err(|e: Vec<u8>| {
-                SignalProtocolError::BadKeyLength(KeyType::Curve25519, e.len())
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::Public,
+                    e.len(),
+                )
             })?;
 
         let signing_key = PublicKey::deserialize(&signing_key)?;

@@ -9,8 +9,8 @@ use crate::{
         self,
         curve25519::{PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH},
     },
-    message_encrypt, proto, session_cipher, CiphertextMessageType, Context, Direction,
-    IdentityKeyStore, KeyPair, KeyType, PreKeySignalMessage, PreKeyStore, PrivateKey,
+    message_encrypt, proto, session_cipher, AsymmetricRole, CiphertextMessageType, Context,
+    Direction, IdentityKeyStore, KeyPair, KeyType, PreKeySignalMessage, PreKeyStore, PrivateKey,
     ProtocolAddress, PublicKey, Result, SessionRecord, SessionStore, SignalMessage,
     SignalProtocolError, SignedPreKeyStore, HKDF,
 };
@@ -62,7 +62,11 @@ impl ServerCertificate {
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
         let signature: &[u8; SIGNATURE_LENGTH] =
             &signature_bytes.try_into().map_err(|e: Vec<u8>| {
-                SignalProtocolError::BadKeyLength(KeyType::Curve25519, e.len())
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::Signature,
+                    e.len(),
+                )
             })?;
         let certificate_data =
             proto::sealed_sender::server_certificate::Certificate::decode(certificate.as_ref())?;
@@ -79,7 +83,11 @@ impl ServerCertificate {
             (*signature)
                 .try_into()
                 .map_err(|_: ::std::convert::Infallible| {
-                    SignalProtocolError::BadKeyLength(KeyType::Curve25519, signature.len())
+                    SignalProtocolError::BadKeyLength(
+                        KeyType::Curve25519,
+                        AsymmetricRole::Signature,
+                        signature.len(),
+                    )
                 })?;
 
         Ok(Self {
@@ -107,7 +115,11 @@ impl ServerCertificate {
 
         let signature = trust_root.calculate_signature(&certificate, rng)?.to_vec();
         let signature: &[u8; SIGNATURE_LENGTH] = &signature.try_into().map_err(|e: Vec<u8>| {
-            SignalProtocolError::BadKeyLength(KeyType::Curve25519, e.len())
+            SignalProtocolError::BadKeyLength(
+                KeyType::Curve25519,
+                AsymmetricRole::Signature,
+                e.len(),
+            )
         })?;
 
         let mut serialized = vec![];
@@ -121,7 +133,11 @@ impl ServerCertificate {
             (*signature)
                 .try_into()
                 .map_err(|_: ::std::convert::Infallible| {
-                    SignalProtocolError::BadKeyLength(KeyType::Curve25519, signature.len())
+                    SignalProtocolError::BadKeyLength(
+                        KeyType::Curve25519,
+                        AsymmetricRole::Signature,
+                        signature.len(),
+                    )
                 })?;
 
         Ok(Self {
@@ -197,7 +213,11 @@ impl SenderCertificate {
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
         let signature: &[u8; SIGNATURE_LENGTH] =
             &signature_bytes.try_into().map_err(|e: Vec<u8>| {
-                SignalProtocolError::BadKeyLength(KeyType::Curve25519, e.len())
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::Signature,
+                    e.len(),
+                )
             })?;
         let certificate_data =
             proto::sealed_sender::sender_certificate::Certificate::decode(certificate.as_ref())?;
@@ -588,7 +608,11 @@ impl UnidentifiedSenderMessage {
                     .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
                 let ephemeral_public: &[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH] =
                     &ephemeral_public_bytes.try_into().map_err(|e: Vec<u8>| {
-                        SignalProtocolError::BadKeyLength(curve::KeyType::Curve25519, e.len())
+                        SignalProtocolError::BadKeyLength(
+                            curve::KeyType::Curve25519,
+                            AsymmetricRole::Public,
+                            e.len(),
+                        )
                     })?;
                 let encrypted_static = pb
                     .encrypted_static
@@ -620,6 +644,7 @@ impl UnidentifiedSenderMessage {
                     .map_err(|_: ::std::array::TryFromSliceError| {
                         SignalProtocolError::BadKeyLength(
                             KeyType::Curve25519,
+                            AsymmetricRole::Public,
                             ephemeral_public.len(),
                         )
                     })?;
@@ -779,7 +804,11 @@ pub async fn sealed_sender_encrypt_from_usmc<R: Rng + CryptoRng>(
             .cipher_key()
             .try_into()
             .map_err(|_: ::std::convert::Infallible| {
-                SignalProtocolError::BadKeyLength(KeyType::Curve25519, eph_keys.cipher_key().len())
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::SymmetricKey,
+                    eph_keys.cipher_key().len(),
+                )
             })?,
         &eph_keys.mac_key(),
     )?;
@@ -789,7 +818,11 @@ pub async fn sealed_sender_encrypt_from_usmc<R: Rng + CryptoRng>(
             .chain_key()
             .try_into()
             .map_err(|_: ::std::convert::Infallible| {
-                SignalProtocolError::BadKeyLength(KeyType::Curve25519, eph_keys.chain_key().len())
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::SymmetricKey,
+                    eph_keys.chain_key().len(),
+                )
             })?;
     let static_keys = sealed_sender_v1::StaticKeys::calculate(
         their_identity.public_key(),
@@ -802,7 +835,11 @@ pub async fn sealed_sender_encrypt_from_usmc<R: Rng + CryptoRng>(
         .cipher_key()
         .try_into()
         .map_err(|_: ::std::convert::Infallible| {
-            SignalProtocolError::BadKeyLength(KeyType::Curve25519, static_keys.cipher_key().len())
+            SignalProtocolError::BadKeyLength(
+                KeyType::Curve25519,
+                AsymmetricRole::SymmetricKey,
+                static_keys.cipher_key().len(),
+            )
         })?;
     let message_data = crypto::aes256_ctr_hmacsha256_encrypt(
         usmc.serialized()?,

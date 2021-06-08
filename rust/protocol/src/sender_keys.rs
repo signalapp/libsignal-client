@@ -9,7 +9,7 @@ use crate::curve::curve25519::{PRIVATE_KEY_LENGTH, PUBLIC_KEY_LENGTH};
 use crate::proto::storage as storage_proto;
 use crate::protocol::SENDERKEY_MESSAGE_CURRENT_VERSION;
 use crate::utils::no_encoding_error;
-use crate::{KeyType, PrivateKey, PublicKey, Result, SignalProtocolError, HKDF};
+use crate::{AsymmetricRole, KeyType, PrivateKey, PublicKey, Result, SignalProtocolError, HKDF};
 
 use arrayref::array_ref;
 use prost::Message;
@@ -45,7 +45,7 @@ impl SenderMessageKey {
         smk: storage_proto::sender_key_state_structure::SenderMessageKey,
     ) -> Result<Self> {
         let seed: &[u8; HMAC_OUTPUT_SIZE] = &smk.seed.try_into().map_err(|e: Vec<u8>| {
-            SignalProtocolError::BadKeyLength(KeyType::Curve25519, e.len())
+            SignalProtocolError::BadKeyLength(KeyType::Curve25519, AsymmetricRole::Hmac, e.len())
         })?;
         Self::new(smk.iteration, *seed)
     }
@@ -188,8 +188,12 @@ impl SenderKeyState {
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
         Ok(SenderChainKey::new(
             sender_chain.iteration,
-            sender_chain.seed.clone().try_into().map_err(|_: Vec<u8>| {
-                SignalProtocolError::BadKeyLength(KeyType::Curve25519, sender_chain.seed.len())
+            sender_chain.seed.clone().try_into().map_err(|e: Vec<u8>| {
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::Hmac,
+                    e.len(),
+                )
             })?,
         ))
     }

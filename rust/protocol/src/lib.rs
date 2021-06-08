@@ -49,7 +49,7 @@ use error::Result;
 
 pub use {
     address::{DeviceId, ProtocolAddress},
-    curve::{KeyPair, PrivateKey, PublicKey},
+    curve::{KeyPair, KeyType, Keyed, PrivateKey, PublicKey},
     error::SignalProtocolError,
     fingerprint::{DisplayableFingerprint, Fingerprint, ScannableFingerprint},
     group_cipher::{

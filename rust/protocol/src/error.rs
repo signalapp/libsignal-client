@@ -133,7 +133,7 @@ impl fmt::Display for SignalProtocolError {
             SignalProtocolError::NoKeyTypeIdentifier => write!(f, "no key type identifier"),
             SignalProtocolError::BadKeyType(t) => write!(f, "bad key type <{:#04x}>", t),
             SignalProtocolError::BadKeyLength(t, l) => {
-                write!(f, "bad key length <{}> for key with type <{}>", l, t)
+                write!(f, "bad key length <{:?}> for key with type <{:?}>", l, t)
             }
             SignalProtocolError::InvalidPreKeyId => write!(f, "invalid prekey identifier"),
             SignalProtocolError::InvalidSignedPreKeyId => {

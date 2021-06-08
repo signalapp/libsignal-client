@@ -822,17 +822,11 @@ mod sealed_sender_v2 {
         assert!(input.len() == 32);
 
         let agreement = priv_key.calculate_agreement(&pub_key)?;
+        let priv_pub = priv_key.public_key()?.serialize();
+        let pub_key = pub_key.serialize();
         let agreement_key_input = match direction {
-            Direction::Sending => [
-                agreement,
-                priv_key.public_key()?.serialize(),
-                pub_key.serialize(),
-            ],
-            Direction::Receiving => [
-                agreement,
-                pub_key.serialize(),
-                priv_key.public_key()?.serialize(),
-            ],
+            Direction::Sending => [agreement.as_ref(), priv_pub.as_ref(), pub_key.as_ref()],
+            Direction::Receiving => [agreement.as_ref(), pub_key.as_ref(), priv_pub.as_ref()],
         }
         .concat();
 
@@ -852,7 +846,7 @@ mod sealed_sender_v2 {
         encrypted_message_key: &[u8],
     ) -> Result<Box<[u8]>> {
         let agreement = priv_key.calculate_agreement(&pub_key)?;
-        let mut agreement_key_input = agreement.into_vec();
+        let mut agreement_key_input = agreement.to_vec();
         agreement_key_input.extend_from_slice(&ephemeral_pub_key.serialize());
         agreement_key_input.extend_from_slice(encrypted_message_key);
         match direction {

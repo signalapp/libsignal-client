@@ -9,7 +9,9 @@
 
 #![warn(missing_docs)]
 
+use crate::curve::curve25519::PUBLIC_KEY_LENGTH;
 use crate::proto;
+use crate::utils::no_encoding_error;
 use crate::{KeyPair, PrivateKey, PublicKey, Result, SignalProtocolError};
 
 #[cfg(doc)]
@@ -42,21 +44,21 @@ impl IdentityKey {
 
     /// Return an owned byte slice which can be deserialized with [Self::decode].
     #[inline]
-    pub fn serialize(&self) -> Box<[u8]> {
+    pub fn serialize(&self) -> [u8; 1 + PUBLIC_KEY_LENGTH] {
         self.public_key.serialize()
     }
 
     /// Deserialize a public identity from a byte slice.
     pub fn decode(value: &[u8]) -> Result<Self> {
-        let pk = PublicKey::try_from(value)?;
+        let pk = PublicKey::deserialize_result(value)?;
         Ok(Self { public_key: pk })
     }
 }
 
-impl TryFrom<&[u8]> for IdentityKey {
+impl TryFrom<&[u8; 1 + PUBLIC_KEY_LENGTH]> for IdentityKey {
     type Error = SignalProtocolError;
 
-    fn try_from(value: &[u8]) -> Result<Self> {
+    fn try_from(value: &[u8; 1 + PUBLIC_KEY_LENGTH]) -> Result<Self> {
         IdentityKey::decode(value)
     }
 }
@@ -119,16 +121,10 @@ impl IdentityKeyPair {
 
     /// Return a byte slice which can later be deserialized with [Self::try_from].
     pub fn serialize(&self) -> Box<[u8]> {
-        let structure = proto::storage::IdentityKeyPairStructure {
+        no_encoding_error(proto::storage::IdentityKeyPairStructure {
             public_key: self.identity_key.serialize().to_vec(),
             private_key: self.private_key.serialize().to_vec(),
-        };
-        let mut result = Vec::new();
-
-        // prost documents the only possible encoding error is if there is insufficient
-        // space, which is not a problem when it is allowed to encode into a Vec
-        structure.encode(&mut result).expect("No encoding error");
-        result.into_boxed_slice()
+        })
     }
 }
 
@@ -138,18 +134,18 @@ impl TryFrom<&[u8]> for IdentityKeyPair {
     fn try_from(value: &[u8]) -> Result<Self> {
         let structure = proto::storage::IdentityKeyPairStructure::decode(value)?;
         Ok(Self {
-            identity_key: IdentityKey::try_from(&structure.public_key[..])?,
-            private_key: PrivateKey::deserialize(&structure.private_key)?,
+            identity_key: IdentityKey::new(PublicKey::deserialize_result(
+                &structure.public_key[..],
+            )?),
+            private_key: PrivateKey::deserialize_result(&structure.private_key)?,
         })
     }
 }
 
-impl TryFrom<PrivateKey> for IdentityKeyPair {
-    type Error = SignalProtocolError;
-
-    fn try_from(private_key: PrivateKey) -> Result<Self> {
-        let identity_key = IdentityKey::new(private_key.public_key()?);
-        Ok(Self::new(identity_key, private_key))
+impl From<PrivateKey> for IdentityKeyPair {
+    fn from(private_key: PrivateKey) -> Self {
+        let identity_key = IdentityKey::new(private_key.public_key());
+        Self::new(identity_key, private_key)
     }
 }
 
@@ -165,7 +161,7 @@ impl From<KeyPair> for IdentityKeyPair {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Keyed;
+    use crate::curve::Keyed;
 
     use rand::rngs::OsRng;
 
@@ -174,7 +170,10 @@ mod tests {
         let key_pair = KeyPair::generate(&mut OsRng);
         let key_pair_public_serialized = key_pair.public_key.serialize();
         let identity_key = IdentityKey::from(key_pair.public_key);
-        assert_eq!(key_pair_public_serialized, identity_key.serialize());
+        assert_eq!(
+            key_pair_public_serialized.as_ref(),
+            identity_key.serialize().as_ref()
+        );
     }
 
     #[test]

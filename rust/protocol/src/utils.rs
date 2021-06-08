@@ -3,7 +3,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+use prost;
+
 use std::cmp::Ordering;
+
+// prost documents the only possible encoding error is if there is insufficient
+// space, which is not a problem when it is allowed to encode into a Vec
+pub(crate) fn no_encoding_error<M: prost::Message>(m: M) -> Box<[u8]> {
+    let mut result = Vec::new();
+    m.encode(&mut result)
+        .expect("no prost error encoding into a Vec");
+    result.into_boxed_slice()
+}
 
 fn expand_top_bit(a: u8) -> u8 {
     //if (a >> 7) == 1 { 0xFF } else { 0 }

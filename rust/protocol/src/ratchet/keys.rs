@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -100,23 +100,23 @@ impl ChainKey {
         self.index
     }
 
-    pub fn next_chain_key(&self) -> Result<Self> {
-        Ok(Self {
+    pub fn next_chain_key(&self) -> Self {
+        Self {
             kdf: self.kdf,
-            key: self.calculate_base_material(Self::CHAIN_KEY_SEED)?,
+            key: self.calculate_base_material(Self::CHAIN_KEY_SEED),
             index: self.index + 1,
-        })
+        }
     }
 
     pub fn message_keys(&self) -> Result<MessageKeys> {
         MessageKeys::derive_keys(
-            &self.calculate_base_material(Self::MESSAGE_KEY_SEED)?,
+            &self.calculate_base_material(Self::MESSAGE_KEY_SEED),
             self.kdf,
             self.index,
         )
     }
 
-    fn calculate_base_material(&self, seed: [u8; 1]) -> Result<[u8; 32]> {
+    fn calculate_base_material(&self, seed: [u8; 1]) -> [u8; crypto::HMAC_OUTPUT_SIZE] {
         crypto::hmac_sha256(&self.key, &seed)
     }
 }
@@ -206,11 +206,11 @@ mod tests {
         assert_eq!(&seed, chain_key.key());
         assert_eq!(&message_key, chain_key.message_keys()?.cipher_key());
         assert_eq!(&mac_key, chain_key.message_keys()?.mac_key());
-        assert_eq!(&next_chain_key, chain_key.next_chain_key()?.key());
+        assert_eq!(&next_chain_key, chain_key.next_chain_key().key());
         assert_eq!(0, chain_key.index());
         assert_eq!(0, chain_key.message_keys()?.counter());
-        assert_eq!(1, chain_key.next_chain_key()?.index());
-        assert_eq!(1, chain_key.next_chain_key()?.message_keys()?.counter());
+        assert_eq!(1, chain_key.next_chain_key().index());
+        assert_eq!(1, chain_key.next_chain_key().message_keys()?.counter());
         Ok(())
     }
 
@@ -241,11 +241,11 @@ mod tests {
         assert_eq!(&seed, chain_key.key());
         assert_eq!(&message_key, chain_key.message_keys()?.cipher_key());
         assert_eq!(&mac_key, chain_key.message_keys()?.mac_key());
-        assert_eq!(&next_chain_key, chain_key.next_chain_key()?.key());
+        assert_eq!(&next_chain_key, chain_key.next_chain_key().key());
         assert_eq!(0, chain_key.index());
         assert_eq!(0, chain_key.message_keys()?.counter());
-        assert_eq!(1, chain_key.next_chain_key()?.index());
-        assert_eq!(1, chain_key.next_chain_key()?.message_keys()?.counter());
+        assert_eq!(1, chain_key.next_chain_key().index());
+        assert_eq!(1, chain_key.next_chain_key().message_keys()?.counter());
         Ok(())
     }
 
@@ -284,8 +284,8 @@ mod tests {
             0xa7, 0xe3, 0x35, 0xd1,
         ];
 
-        let alice_private_key = PrivateKey::deserialize(&alice_private)?;
-        let bob_public_key = PublicKey::deserialize(&bob_public)?;
+        let alice_private_key = PrivateKey::deserialize_result(&alice_private)?;
+        let bob_public_key = PublicKey::deserialize_result(&bob_public)?;
         let root_key = RootKey::new(HKDF::new(2)?, &root_key_seed)?;
 
         let (next_root_key, next_chain_key) =

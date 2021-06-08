@@ -25,6 +25,7 @@ pub use crate::{
 #[cfg(doc)]
 use uuid::Uuid;
 
+use std::convert::Infallible;
 use std::error::Error;
 use std::fmt;
 use std::panic::UnwindSafe;
@@ -187,6 +188,14 @@ impl Error for SignalProtocolError {
             SignalProtocolError::ApplicationCallbackError(_, e) => Some(e.as_ref()),
             _ => None,
         }
+    }
+}
+
+/// According to the docs for [Infallible], this error case should never be raised, so we just use
+/// `unreachable!()`.
+impl From<Infallible> for SignalProtocolError {
+    fn from(_value: Infallible) -> SignalProtocolError {
+        unreachable!("Infallible From impl reached")
     }
 }
 

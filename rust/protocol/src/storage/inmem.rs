@@ -277,7 +277,7 @@ impl InMemSenderKeyStore {
     /// Create an empty sender key store.
     pub fn new() -> Self {
         Self {
-            keys: HashMap::new(),
+            keys: HashMap::<(Cow<'static, ProtocolAddress>, Uuid), SenderKeyRecord>::new(),
         }
     }
 }

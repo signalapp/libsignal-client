@@ -1,36 +1,52 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+//! Wrappers over cryptographic primitives from [crate::curve] to represent [identity].
+//!
+//! [identity]: https://en.wikipedia.org/wiki/Online_identity
+
+#![warn(missing_docs)]
+
 use crate::proto;
 use crate::{KeyPair, PrivateKey, PublicKey, Result, SignalProtocolError};
+
+#[cfg(doc)]
+use crate::{protocol::PreKeySignalMessage, state::SessionRecord, storage::IdentityKeyStore};
 
 use rand::{CryptoRng, Rng};
 use std::convert::TryFrom;
 
 use prost::Message;
 
+/// The public identity of a user, used in [IdentityKeyStore].
+///
+/// Wrapper for [PublicKey].
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Clone, Copy)]
 pub struct IdentityKey {
     public_key: PublicKey,
 }
 
 impl IdentityKey {
+    /// Initialize a public-facing identity from a public key.
     pub fn new(public_key: PublicKey) -> Self {
         Self { public_key }
     }
 
+    /// Return a public key representing the public identity.
     #[inline]
     pub fn public_key(&self) -> &PublicKey {
         &self.public_key
     }
 
+    /// Return an owned byte slice which can be deserialized with [Self::decode].
     #[inline]
     pub fn serialize(&self) -> Box<[u8]> {
         self.public_key.serialize()
     }
 
+    /// Deserialize a public identity from a byte slice.
     pub fn decode(value: &[u8]) -> Result<Self> {
         let pk = PublicKey::try_from(value)?;
         Ok(Self { public_key: pk })
@@ -51,6 +67,13 @@ impl From<PublicKey> for IdentityKey {
     }
 }
 
+/// The private identity of a user.
+///
+/// This cryptographic identity is used to sign pre-keys in [PreKeySignalMessage], to conceal
+/// sealed-sender [crate::sealed_sender::UnidentifiedSenderMessage]s, or to initiate the key
+/// derivation function for a [SessionRecord].
+///
+/// Also see [KeyPair].
 #[derive(Copy, Clone, Debug)]
 pub struct IdentityKeyPair {
     identity_key: IdentityKey,
@@ -58,6 +81,7 @@ pub struct IdentityKeyPair {
 }
 
 impl IdentityKeyPair {
+    /// Create a key pair from a public `identity_key` and a private `private_key`.
     pub fn new(identity_key: IdentityKey, private_key: PrivateKey) -> Self {
         Self {
             identity_key,
@@ -65,6 +89,7 @@ impl IdentityKeyPair {
         }
     }
 
+    /// Generate a random new identity from randomness in `csprng`.
     pub fn generate<R: CryptoRng + Rng>(csprng: &mut R) -> Self {
         let keypair = KeyPair::generate(csprng);
 
@@ -74,21 +99,25 @@ impl IdentityKeyPair {
         }
     }
 
+    /// Return the public identity of this user.
     #[inline]
     pub fn identity_key(&self) -> &IdentityKey {
         &self.identity_key
     }
 
+    /// Return the public key that defines this identity.
     #[inline]
     pub fn public_key(&self) -> &PublicKey {
         &self.identity_key.public_key()
     }
 
+    /// Return the private key that defines this identity.
     #[inline]
     pub fn private_key(&self) -> &PrivateKey {
         &self.private_key
     }
 
+    /// Return a byte slice which can later be deserialized with [Self::try_from].
     pub fn serialize(&self) -> Box<[u8]> {
         let structure = proto::storage::IdentityKeyPairStructure {
             public_key: self.identity_key.serialize().to_vec(),

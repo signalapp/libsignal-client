@@ -280,6 +280,16 @@ impl TryFrom<&[u8]> for PrivateKey {
     }
 }
 
+impl fmt::Debug for PrivateKey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "PrivateKey {{ public_key_version={:?} }}",
+            self.public_key().expect("should always have a public key")
+        )
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct KeyPair {
     pub public_key: PublicKey,

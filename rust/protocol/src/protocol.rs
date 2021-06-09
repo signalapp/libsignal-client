@@ -3,10 +3,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+use crate::curve::curve25519::{PRIVATE_KEY_LENGTH, SIGNATURE_LENGTH};
 use crate::proto;
-use crate::{IdentityKey, PrivateKey, PublicKey, Result, SignalProtocolError};
+use crate::{
+    AsymmetricRole, IdentityKey, KeyType, PrivateKey, PublicKey, Result, SignalProtocolError,
+};
 
-use std::convert::TryFrom;
+#[cfg(doc)]
+use crate::sender_keys::SenderKeyRecord;
+
+use std::convert::{TryFrom, TryInto};
 
 use hmac::{Hmac, Mac, NewMac};
 use prost::Message;
@@ -15,7 +21,10 @@ use sha2::Sha256;
 use subtle::ConstantTimeEq;
 use uuid::Uuid;
 
+/// Each type of message in the Signal Protocol has a message version mixed into it when
+/// created. Prefer to reference this value over use of the literal version number.
 pub const CIPHERTEXT_MESSAGE_CURRENT_VERSION: u8 = 3;
+/// Each [SenderKeyRecord] has a message version field as well.
 pub const SENDERKEY_MESSAGE_CURRENT_VERSION: u8 = 3;
 
 pub enum CiphertextMessage {
@@ -79,7 +88,7 @@ impl SignalMessage {
         receiver_identity_key: &IdentityKey,
     ) -> Result<Self> {
         let message = proto::wire::SignalMessage {
-            ratchet_key: Some(sender_ratchet_key.serialize().into_vec()),
+            ratchet_key: Some(sender_ratchet_key.serialize().to_vec()),
             counter: Some(counter),
             previous_counter: Some(previous_counter),
             ciphertext: Some(Vec::<u8>::from(&ciphertext[..])),
@@ -208,10 +217,10 @@ impl TryFrom<&[u8]> for SignalMessage {
         let proto_structure =
             proto::wire::SignalMessage::decode(&value[1..value.len() - SignalMessage::MAC_LENGTH])?;
 
-        let sender_ratchet_key = proto_structure
+        let ratchet_key_bytes: Vec<u8> = proto_structure
             .ratchet_key
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
-        let sender_ratchet_key = PublicKey::deserialize(&sender_ratchet_key)?;
+        let sender_ratchet_key = PublicKey::deserialize_result(&ratchet_key_bytes)?;
         let counter = proto_structure
             .counter
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
@@ -258,8 +267,8 @@ impl PreKeySignalMessage {
             registration_id: Some(registration_id),
             pre_key_id,
             signed_pre_key_id: Some(signed_pre_key_id),
-            base_key: Some(base_key.serialize().into_vec()),
-            identity_key: Some(identity_key.serialize().into_vec()),
+            base_key: Some(base_key.serialize().to_vec()),
+            identity_key: Some(identity_key.serialize().to_vec()),
             message: Some(Vec::from(message.as_ref())),
         };
         let mut serialized = vec![0u8; 1 + proto_message.encoded_len()];
@@ -346,10 +355,10 @@ impl TryFrom<&[u8]> for PreKeySignalMessage {
 
         let proto_structure = proto::wire::PreKeySignalMessage::decode(&value[1..])?;
 
-        let base_key = proto_structure
+        let base_key_bytes: Vec<u8> = proto_structure
             .base_key
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
-        let identity_key = proto_structure
+        let identity_key_bytes: Vec<u8> = proto_structure
             .identity_key
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
         let message = proto_structure
@@ -359,7 +368,7 @@ impl TryFrom<&[u8]> for PreKeySignalMessage {
             .signed_pre_key_id
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
 
-        let base_key = PublicKey::deserialize(base_key.as_ref())?;
+        let base_key = PublicKey::deserialize_result(base_key_bytes.as_ref())?;
 
         Ok(PreKeySignalMessage {
             message_version,
@@ -367,7 +376,7 @@ impl TryFrom<&[u8]> for PreKeySignalMessage {
             pre_key_id: proto_structure.pre_key_id,
             signed_pre_key_id,
             base_key,
-            identity_key: IdentityKey::try_from(identity_key.as_ref())?,
+            identity_key: IdentityKey::new(PublicKey::deserialize_result(&identity_key_bytes)?),
             message: SignalMessage::try_from(message.as_ref())?,
             serialized: Box::from(value),
         })
@@ -381,12 +390,12 @@ pub struct SenderKeyMessage {
     chain_id: u32,
     iteration: u32,
     ciphertext: Box<[u8]>,
+    semi_serialized: Box<[u8]>,
+    signature: [u8; SIGNATURE_LENGTH],
     serialized: Box<[u8]>,
 }
 
 impl SenderKeyMessage {
-    const SIGNATURE_LEN: usize = 64;
-
     pub fn new<R: CryptoRng + Rng>(
         message_version: u8,
         distribution_id: Uuid,
@@ -403,29 +412,63 @@ impl SenderKeyMessage {
             ciphertext: Some(ciphertext.to_vec()),
         };
         let proto_message_len = proto_message.encoded_len();
-        let mut serialized = vec![0u8; 1 + proto_message_len + Self::SIGNATURE_LEN];
+        let mut serialized = vec![0u8; 1 + proto_message_len + SIGNATURE_LENGTH];
         serialized[0] = ((message_version & 0xF) << 4) | SENDERKEY_MESSAGE_CURRENT_VERSION;
         proto_message.encode(&mut &mut serialized[1..1 + proto_message_len])?;
         let signature =
             signature_key.calculate_signature(&serialized[..1 + proto_message_len], csprng)?;
         serialized[1 + proto_message_len..].copy_from_slice(&signature[..]);
+
+        let (semi_serialized, serialized, signature) =
+            Self::split_serialized_signature(&serialized)?;
+
         Ok(Self {
             message_version: SENDERKEY_MESSAGE_CURRENT_VERSION,
             distribution_id,
             chain_id,
             iteration,
             ciphertext,
-            serialized: serialized.into_boxed_slice(),
+            semi_serialized,
+            signature,
+            serialized,
         })
     }
 
-    pub fn verify_signature(&self, signature_key: &PublicKey) -> Result<bool> {
-        let valid = signature_key.verify_signature(
-            &self.serialized[..self.serialized.len() - Self::SIGNATURE_LEN],
-            &self.serialized[self.serialized.len() - Self::SIGNATURE_LEN..],
-        )?;
+    /// Return a tuple containing:
+    /// 1. the serialized message *without* the signature at the end.
+    /// 2. the complete serialized message *with* signature.
+    /// 3. the signature as a fixed-size array.
+    fn split_serialized_signature(
+        serialized: &[u8],
+    ) -> Result<(Box<[u8]>, Box<[u8]>, [u8; SIGNATURE_LENGTH])> {
+        let (semi_serialized, signature) = serialized.split_at(serialized.len() - SIGNATURE_LENGTH);
+        let signature: Vec<u8> = signature.to_vec();
+        let signature: &[u8; SIGNATURE_LENGTH] = &signature.try_into().map_err(|e: Vec<u8>| {
+            SignalProtocolError::BadKeyLength(
+                KeyType::Curve25519,
+                AsymmetricRole::Signature,
+                e.len(),
+            )
+        })?;
+        Ok((
+            semi_serialized
+                .iter()
+                .cloned()
+                .collect::<Vec<_>>()
+                .into_boxed_slice(),
+            semi_serialized
+                .iter()
+                .cloned()
+                // NB: The 2nd element of the return value has the `signature` at the end!
+                .chain(signature.iter().cloned())
+                .collect::<Vec<_>>()
+                .into_boxed_slice(),
+            *signature,
+        ))
+    }
 
-        Ok(valid)
+    pub fn verify_signature(&self, signature_key: &PublicKey) -> bool {
+        signature_key.verify_signature(&self.semi_serialized, &self.signature)
     }
 
     #[inline]
@@ -469,7 +512,7 @@ impl TryFrom<&[u8]> for SenderKeyMessage {
     type Error = SignalProtocolError;
 
     fn try_from(value: &[u8]) -> Result<Self> {
-        if value.len() < 1 + Self::SIGNATURE_LEN {
+        if value.len() < 1 + SIGNATURE_LENGTH {
             return Err(SignalProtocolError::CiphertextMessageTooShort(value.len()));
         }
         let message_version = value[0] >> 4;
@@ -484,7 +527,7 @@ impl TryFrom<&[u8]> for SenderKeyMessage {
             ));
         }
         let proto_structure =
-            proto::wire::SenderKeyMessage::decode(&value[1..value.len() - Self::SIGNATURE_LEN])?;
+            proto::wire::SenderKeyMessage::decode(&value[1..value.len() - SIGNATURE_LENGTH])?;
 
         let distribution_id = proto_structure
             .distribution_uuid
@@ -501,13 +544,17 @@ impl TryFrom<&[u8]> for SenderKeyMessage {
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?
             .into_boxed_slice();
 
+        let (semi_serialized, serialized, signature) = Self::split_serialized_signature(&value)?;
+
         Ok(SenderKeyMessage {
             message_version,
             distribution_id,
             chain_id,
             iteration,
             ciphertext,
-            serialized: Box::from(value),
+            semi_serialized,
+            signature,
+            serialized,
         })
     }
 }
@@ -518,7 +565,7 @@ pub struct SenderKeyDistributionMessage {
     distribution_id: Uuid,
     chain_id: u32,
     iteration: u32,
-    chain_key: Vec<u8>,
+    chain_key: [u8; PRIVATE_KEY_LENGTH],
     signing_key: PublicKey,
     serialized: Box<[u8]>,
 }
@@ -529,14 +576,14 @@ impl SenderKeyDistributionMessage {
         distribution_id: Uuid,
         chain_id: u32,
         iteration: u32,
-        chain_key: Vec<u8>,
+        chain_key: [u8; PRIVATE_KEY_LENGTH],
         signing_key: PublicKey,
     ) -> Result<Self> {
         let proto_message = proto::wire::SenderKeyDistributionMessage {
             distribution_uuid: Some(distribution_id.as_bytes().to_vec()),
             chain_id: Some(chain_id),
             iteration: Some(iteration),
-            chain_key: Some(chain_key.clone()),
+            chain_key: Some(chain_key.to_vec()),
             signing_key: Some(signing_key.serialize().to_vec()),
         };
         let mut serialized = vec![0u8; 1 + proto_message.encoded_len()];
@@ -575,7 +622,7 @@ impl SenderKeyDistributionMessage {
     }
 
     #[inline]
-    pub fn chain_key(&self) -> Result<&[u8]> {
+    pub fn chain_key(&self) -> Result<&[u8; PRIVATE_KEY_LENGTH]> {
         Ok(&self.chain_key)
     }
 
@@ -630,16 +677,29 @@ impl TryFrom<&[u8]> for SenderKeyDistributionMessage {
         let iteration = proto_structure
             .iteration
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
-        let chain_key = proto_structure
+        let chain_key_bytes: Vec<u8> = proto_structure
             .chain_key
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
-        let signing_key = proto_structure
+        let signing_key_bytes: Vec<u8> = proto_structure
             .signing_key
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
 
-        if chain_key.len() != 32 || signing_key.len() != 33 {
-            return Err(SignalProtocolError::InvalidProtobufEncoding);
-        }
+        let chain_key: &[u8; PRIVATE_KEY_LENGTH] =
+            &chain_key_bytes.try_into().map_err(|e: Vec<u8>| {
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::Private,
+                    e.len(),
+                )
+            })?;
+        let signing_key: &[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH] =
+            &signing_key_bytes.try_into().map_err(|e: Vec<u8>| {
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::Public,
+                    e.len(),
+                )
+            })?;
 
         let signing_key = PublicKey::deserialize(&signing_key)?;
 
@@ -648,7 +708,7 @@ impl TryFrom<&[u8]> for SenderKeyDistributionMessage {
             distribution_id,
             chain_id,
             iteration,
-            chain_key,
+            chain_key: *chain_key,
             signing_key,
             serialized: Box::from(value),
         })
@@ -797,10 +857,11 @@ impl TryFrom<&[u8]> for DecryptionErrorMessage {
         let timestamp = proto_structure
             .timestamp
             .ok_or(SignalProtocolError::InvalidProtobufEncoding)?;
-        let ratchet_key = proto_structure
+        let ratchet_key: Option<PublicKey> = proto_structure
             .ratchet_key
-            .map(|k| PublicKey::deserialize(&k))
-            .transpose()?;
+            .map(|k| PublicKey::deserialize_result(&k))
+            .transpose()?
+            .clone();
         let device_id = proto_structure.device_id.unwrap_or_default();
         Ok(Self {
             timestamp,

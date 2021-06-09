@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC
+// Copyright 2020-2021 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -84,7 +84,7 @@ class PublicAPITests: TestCaseBase {
 
         let pk = sk.publicKey
         let pk_bytes = pk.serialize()
-        XCTAssertEqual(pk_bytes[0], 0x05) // DJB
+        XCTAssertEqual(pk_bytes[0], 0x05) // Curve25519
         XCTAssertEqual(pk_bytes.count, 33)
 
         let pk_raw = pk.keyBytes

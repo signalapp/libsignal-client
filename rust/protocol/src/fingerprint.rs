@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -216,6 +216,8 @@ impl Fingerprint {
 mod test {
     use super::*;
 
+    use arrayref::array_ref;
+
     const ALICE_IDENTITY: &str =
         "0506863bc66d02b40d27b8d49ca7c09e9239236f9d7d25d6fcca5ce13c7064d868";
     const BOB_IDENTITY: &str = "05f781b6fb32fed9ba1cf2de978d4d5da28dc34046ae814402b5c0dbd96fda907b";
@@ -250,8 +252,10 @@ mod test {
     fn fingerprint_test_v1() -> Result<()> {
         // testVectorsVersion1 in Java
 
-        let a_key = IdentityKey::decode(&hex::decode(ALICE_IDENTITY).expect("valid hex"))?;
-        let b_key = IdentityKey::decode(&hex::decode(BOB_IDENTITY).expect("valid hex"))?;
+        let a_bytes = hex::decode(ALICE_IDENTITY).expect("valid hex");
+        let a_key = IdentityKey::decode(array_ref![&a_bytes, 0, 33])?;
+        let b_bytes = hex::decode(BOB_IDENTITY).expect("valid hex");
+        let b_key = IdentityKey::decode(array_ref![&b_bytes, 0, 33])?;
 
         let version = 1;
         let iterations = 5200;
@@ -302,8 +306,10 @@ mod test {
     fn fingerprint_test_v2() -> Result<()> {
         // testVectorsVersion2 in Java
 
-        let a_key = IdentityKey::decode(&hex::decode(ALICE_IDENTITY).expect("valid hex"))?;
-        let b_key = IdentityKey::decode(&hex::decode(BOB_IDENTITY).expect("valid hex"))?;
+        let a_bytes = hex::decode(ALICE_IDENTITY).expect("valid hex");
+        let a_key = IdentityKey::decode(array_ref![&a_bytes, 0, 33])?;
+        let b_bytes = hex::decode(BOB_IDENTITY).expect("valid hex");
+        let b_key = IdentityKey::decode(array_ref![&b_bytes, 0, 33])?;
 
         let version = 2;
         let iterations = 5200;
@@ -531,8 +537,10 @@ mod test {
 
     #[test]
     fn fingerprint_mismatching_versions() -> Result<()> {
-        let a_key = IdentityKey::decode(&hex::decode(ALICE_IDENTITY).expect("valid hex"))?;
-        let b_key = IdentityKey::decode(&hex::decode(BOB_IDENTITY).expect("valid hex"))?;
+        let a_bytes = hex::decode(ALICE_IDENTITY).expect("valid hex");
+        let a_key = IdentityKey::decode(array_ref![&a_bytes, 0, 33])?;
+        let b_bytes = hex::decode(BOB_IDENTITY).expect("valid hex");
+        let b_key = IdentityKey::decode(array_ref![&b_bytes, 0, 33])?;
 
         let iterations = 5200;
 

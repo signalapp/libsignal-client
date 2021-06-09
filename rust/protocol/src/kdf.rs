@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -14,7 +14,7 @@ pub struct HKDF {
 }
 
 impl HKDF {
-    const HASH_OUTPUT_SIZE: usize = 32;
+    const HASH_OUTPUT_SIZE: usize = crate::crypto::HMAC_OUTPUT_SIZE;
 
     pub fn new(message_version: u32) -> Result<Self> {
         match message_version {
@@ -51,15 +51,11 @@ impl HKDF {
         info: &[u8],
         output_length: usize,
     ) -> Result<Box<[u8]>> {
-        let prk = self.extract(salt, input_key_material)?;
+        let prk = self.extract(salt, input_key_material);
         self.expand(&prk, info, output_length)
     }
 
-    fn extract(
-        self,
-        salt: &[u8],
-        input_key_material: &[u8],
-    ) -> Result<[u8; Self::HASH_OUTPUT_SIZE]> {
+    fn extract(self, salt: &[u8], input_key_material: &[u8]) -> [u8; Self::HASH_OUTPUT_SIZE] {
         crate::crypto::hmac_sha256(salt, input_key_material)
     }
 

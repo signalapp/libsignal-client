@@ -1,8 +1,9 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+use crate::curve::curve25519::SIGNATURE_LENGTH;
 use crate::state::{PreKeyId, SignedPreKeyId};
 use crate::{IdentityKey, PublicKey, Result};
 
@@ -14,7 +15,7 @@ pub struct PreKeyBundle {
     pre_key_public: Option<PublicKey>,
     signed_pre_key_id: SignedPreKeyId,
     signed_pre_key_public: PublicKey,
-    signed_pre_key_signature: Vec<u8>,
+    signed_pre_key_signature: [u8; SIGNATURE_LENGTH],
     identity_key: IdentityKey,
 }
 
@@ -25,7 +26,7 @@ impl PreKeyBundle {
         pre_key: Option<(PreKeyId, PublicKey)>,
         signed_pre_key_id: SignedPreKeyId,
         signed_pre_key_public: PublicKey,
-        signed_pre_key_signature: Vec<u8>,
+        signed_pre_key_signature: [u8; SIGNATURE_LENGTH],
         identity_key: IdentityKey,
     ) -> Result<Self> {
         let (pre_key_id, pre_key_public) = match pre_key {
@@ -69,8 +70,8 @@ impl PreKeyBundle {
         Ok(self.signed_pre_key_public)
     }
 
-    pub fn signed_pre_key_signature(&self) -> Result<&[u8]> {
-        Ok(self.signed_pre_key_signature.as_ref())
+    pub fn signed_pre_key_signature(&self) -> Result<&[u8; SIGNATURE_LENGTH]> {
+        Ok(&self.signed_pre_key_signature)
     }
 
     pub fn identity_key(&self) -> Result<&IdentityKey> {

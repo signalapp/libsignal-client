@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
@@ -75,7 +75,7 @@ pub async fn create_pre_key_bundle<R: Rng + CryptoRng>(
         Some((pre_key_id, pre_key_pair.public_key)),
         signed_pre_key_id,
         signed_pre_key_pair.public_key,
-        signed_pre_key_signature.to_vec(),
+        signed_pre_key_signature,
         *store.get_identity_key_pair(None).await?.identity_key(),
     )?;
 
@@ -97,7 +97,7 @@ pub async fn create_pre_key_bundle<R: Rng + CryptoRng>(
                 timestamp,
                 &signed_pre_key_pair,
                 &signed_pre_key_signature,
-            ),
+            )?,
             None,
         )
         .await?;

@@ -22,6 +22,9 @@
 // https://doc.rust-lang.org/rustdoc/what-to-include.html for background.
 // #![warn(missing_docs)]
 
+// Make all doctests fail if they produce any warnings.
+#![doc(test(attr(deny(warnings))))]
+
 mod address;
 mod consts;
 mod crypto;
@@ -46,7 +49,7 @@ use error::Result;
 
 pub use {
     address::{DeviceId, ProtocolAddress},
-    curve::{KeyPair, PrivateKey, PublicKey},
+    curve::{AsymmetricRole, KeyPair, KeyType, Keyed, PrivateKey, PublicKey},
     error::SignalProtocolError,
     fingerprint::{DisplayableFingerprint, Fingerprint, ScannableFingerprint},
     group_cipher::{
@@ -82,3 +85,24 @@ pub use {
         PreKeyStore, ProtocolStore, SenderKeyStore, SessionStore, SignedPreKeyStore,
     },
 };
+
+#[cfg(doc)]
+pub use utils::constant_time_cmp;
+
+// TODO: #[cfg(doctest)] as per
+// https://doc.rust-lang.org/rustdoc/documentation-tests.html#include-items-only-when-collecting-doctests
+// does not appear to work at all!
+// TODO: the modules crypto_unstable and curve_unstable are a workaround for this that allows us to
+// refer to them in doctests.
+pub mod unstable_internals {
+    pub mod crypto_unstable {
+        pub use super::super::crypto::*;
+    }
+    pub mod curve_unstable {
+        pub use super::super::curve::*;
+    }
+    pub mod utils_unstable {
+        pub use super::super::utils::*;
+    }
+}
+pub use unstable_internals::*;

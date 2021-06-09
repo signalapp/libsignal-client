@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013-2016 Open Whisper Systems
+ * Copyright (C) 2013-2021 Open Whisper Systems
  *
  * Licensed according to the LICENSE file in this repository.
  */
@@ -25,7 +25,7 @@ public class ECPublicKey implements Comparable<ECPublicKey> {
 
   static public ECPublicKey fromPublicKeyBytes(byte[] key) {
     byte[] with_type = new byte[33];
-    with_type[0] = 0x05;
+    with_type[0] = Curve.CURVE_25519_TYPE;
     System.arraycopy(key, 0, with_type, 1, 32);
     return new ECPublicKey(Native.ECPublicKey_Deserialize(with_type, 0));
   }

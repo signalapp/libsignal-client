@@ -165,7 +165,7 @@ impl<'a> JniIdentityKeyStore<'a> {
 
         match bits {
             None => Ok(None),
-            Some(k) => Ok(Some(IdentityKey::decode(&k)?)),
+            Some(k) => Ok(Some(IdentityKey::new(PublicKey::deserialize_result(&k)?))),
         }
     }
 }

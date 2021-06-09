@@ -8,8 +8,11 @@ use crate::ghash::Ghash;
 use crate::{Aes256Ctr32, Error, Result};
 use subtle::ConstantTimeEq;
 
-pub const TAG_SIZE: usize = 16;
-pub const NONCE_SIZE: usize = 12;
+pub const GCM_TAG_SIZE: usize = 16;
+pub const GCM_NONCE_SIZE: usize = 12;
+
+use GCM_NONCE_SIZE as NONCE_SIZE;
+use GCM_TAG_SIZE as TAG_SIZE;
 
 #[derive(Clone)]
 struct GcmGhash {
@@ -125,8 +128,12 @@ pub struct Aes256GcmEncryption {
 }
 
 impl Aes256GcmEncryption {
-    pub const TAG_SIZE: usize = TAG_SIZE;
-    pub const NONCE_SIZE: usize = NONCE_SIZE;
+    pub const GCM_ENCRYPTION_TAG_SIZE: usize = TAG_SIZE;
+    pub const GCM_ENCRYPTION_NONCE_SIZE: usize = NONCE_SIZE;
+
+    const TAG_SIZE: usize = Self::GCM_ENCRYPTION_TAG_SIZE;
+    #[allow(dead_code)]
+    const NONCE_SIZE: usize = Self::GCM_ENCRYPTION_NONCE_SIZE;
 
     pub fn new(key: &[u8], nonce: &[u8], associated_data: &[u8]) -> Result<Self> {
         let (ctr, ghash) = setup_gcm(key, nonce, associated_data)?;
@@ -139,7 +146,7 @@ impl Aes256GcmEncryption {
         Ok(())
     }
 
-    pub fn compute_tag(self) -> Result<[u8; TAG_SIZE]> {
+    pub fn compute_tag(self) -> Result<[u8; Self::TAG_SIZE]> {
         self.ghash.finalize()
     }
 }

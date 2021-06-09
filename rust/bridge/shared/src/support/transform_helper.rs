@@ -59,6 +59,7 @@ impl<T> TransformHelper<Option<T>> {
 impl<T> TransformHelper<Box<[T]>> {
     /// Transforms `TransformHelper<Box<[T]>>` into a `TransformHelper<Vec<T>>`
     /// and leaves other TransformHelper values unchanged.
+    #[allow(dead_code)]
     pub(crate) fn into_vec_if_needed(self) -> TransformHelper<Vec<T>> {
         TransformHelper(self.0.into_vec())
     }

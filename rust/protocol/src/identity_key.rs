@@ -1,46 +1,63 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+//! Wrappers over cryptographic primitives from [crate::curve] to represent [identity].
+//!
+//! [identity]: https://en.wikipedia.org/wiki/Online_identity
+
+#![warn(missing_docs)]
+
 use crate::proto;
+use crate::utils::no_encoding_error;
 use crate::{KeyPair, PrivateKey, PublicKey, Result, SignalProtocolError};
+
+#[cfg(doc)]
+use crate::{protocol::PreKeySignalMessage, state::SessionRecord, storage::IdentityKeyStore};
 
 use rand::{CryptoRng, Rng};
 use std::convert::TryFrom;
 
 use prost::Message;
 
+/// The public identity of a user, used in [IdentityKeyStore].
+///
+/// Wrapper for [PublicKey].
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Clone, Copy)]
 pub struct IdentityKey {
     public_key: PublicKey,
 }
 
 impl IdentityKey {
+    /// Initialize a public-facing identity from a public key.
     pub fn new(public_key: PublicKey) -> Self {
         Self { public_key }
     }
 
+    /// Return a public key representing the public identity.
     #[inline]
     pub fn public_key(&self) -> &PublicKey {
         &self.public_key
     }
 
+    /// Return an owned byte slice which can be deserialized with [Self::decode].
     #[inline]
-    pub fn serialize(&self) -> Box<[u8]> {
+    pub fn serialize(&self) -> [u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH] {
         self.public_key.serialize()
     }
 
+    /// Deserialize a public identity from a byte slice.
     pub fn decode(value: &[u8]) -> Result<Self> {
-        let pk = PublicKey::try_from(value)?;
+        let pk = PublicKey::deserialize_result(value)?;
         Ok(Self { public_key: pk })
     }
 }
 
-impl TryFrom<&[u8]> for IdentityKey {
+impl TryFrom<&[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH]> for IdentityKey {
     type Error = SignalProtocolError;
 
-    fn try_from(value: &[u8]) -> Result<Self> {
+    fn try_from(value: &[u8; PublicKey::ENCODED_PUBLIC_KEY_LENGTH]) -> Result<Self> {
         IdentityKey::decode(value)
     }
 }
@@ -51,13 +68,21 @@ impl From<PublicKey> for IdentityKey {
     }
 }
 
-#[derive(Copy, Clone)]
+/// The private identity of a user.
+///
+/// This cryptographic identity is used to sign pre-keys in [PreKeySignalMessage], to conceal
+/// sealed-sender [crate::sealed_sender::UnidentifiedSenderMessage]s, or to initiate the key
+/// derivation function for a [SessionRecord].
+///
+/// Also see [KeyPair].
+#[derive(Copy, Clone, Debug)]
 pub struct IdentityKeyPair {
     identity_key: IdentityKey,
     private_key: PrivateKey,
 }
 
 impl IdentityKeyPair {
+    /// Create a key pair from a public `identity_key` and a private `private_key`.
     pub fn new(identity_key: IdentityKey, private_key: PrivateKey) -> Self {
         Self {
             identity_key,
@@ -65,6 +90,7 @@ impl IdentityKeyPair {
         }
     }
 
+    /// Generate a random new identity from randomness in `csprng`.
     pub fn generate<R: CryptoRng + Rng>(csprng: &mut R) -> Self {
         let keypair = KeyPair::generate(csprng);
 
@@ -74,32 +100,30 @@ impl IdentityKeyPair {
         }
     }
 
+    /// Return the public identity of this user.
     #[inline]
     pub fn identity_key(&self) -> &IdentityKey {
         &self.identity_key
     }
 
+    /// Return the public key that defines this identity.
     #[inline]
     pub fn public_key(&self) -> &PublicKey {
         &self.identity_key.public_key()
     }
 
+    /// Return the private key that defines this identity.
     #[inline]
     pub fn private_key(&self) -> &PrivateKey {
         &self.private_key
     }
 
+    /// Return a byte slice which can later be deserialized with [Self::try_from].
     pub fn serialize(&self) -> Box<[u8]> {
-        let structure = proto::storage::IdentityKeyPairStructure {
+        no_encoding_error(proto::storage::IdentityKeyPairStructure {
             public_key: self.identity_key.serialize().to_vec(),
             private_key: self.private_key.serialize().to_vec(),
-        };
-        let mut result = Vec::new();
-
-        // prost documents the only possible encoding error is if there is insufficient
-        // space, which is not a problem when it is allowed to encode into a Vec
-        structure.encode(&mut result).expect("No encoding error");
-        result.into_boxed_slice()
+        })
     }
 }
 
@@ -109,18 +133,18 @@ impl TryFrom<&[u8]> for IdentityKeyPair {
     fn try_from(value: &[u8]) -> Result<Self> {
         let structure = proto::storage::IdentityKeyPairStructure::decode(value)?;
         Ok(Self {
-            identity_key: IdentityKey::try_from(&structure.public_key[..])?,
-            private_key: PrivateKey::deserialize(&structure.private_key)?,
+            identity_key: IdentityKey::new(PublicKey::deserialize_result(
+                &structure.public_key[..],
+            )?),
+            private_key: PrivateKey::deserialize_result(&structure.private_key)?,
         })
     }
 }
 
-impl TryFrom<PrivateKey> for IdentityKeyPair {
-    type Error = SignalProtocolError;
-
-    fn try_from(private_key: PrivateKey) -> Result<Self> {
-        let identity_key = IdentityKey::new(private_key.public_key()?);
-        Ok(Self::new(identity_key, private_key))
+impl From<PrivateKey> for IdentityKeyPair {
+    fn from(private_key: PrivateKey) -> Self {
+        let identity_key = IdentityKey::new(private_key.public_key());
+        Self::new(identity_key, private_key)
     }
 }
 
@@ -136,6 +160,7 @@ impl From<KeyPair> for IdentityKeyPair {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::curve::Keyed;
 
     use rand::rngs::OsRng;
 
@@ -144,7 +169,10 @@ mod tests {
         let key_pair = KeyPair::generate(&mut OsRng);
         let key_pair_public_serialized = key_pair.public_key.serialize();
         let identity_key = IdentityKey::from(key_pair.public_key);
-        assert_eq!(key_pair_public_serialized, identity_key.serialize());
+        assert_eq!(
+            key_pair_public_serialized.as_ref(),
+            identity_key.serialize().as_ref()
+        );
     }
 
     #[test]

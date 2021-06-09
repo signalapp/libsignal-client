@@ -1,66 +1,104 @@
 //
-// Copyright 2020 Signal Messenger, LLC.
+// Copyright 2020-2021 Signal Messenger, LLC.
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
+use crate::curve::curve25519::SIGNATURE_LENGTH;
 use crate::proto::storage::SignedPreKeyRecordStructure;
-use crate::{KeyPair, PrivateKey, PublicKey, Result};
+use crate::{AsymmetricRole, KeyPair, KeyType, PrivateKey, PublicKey, Result, SignalProtocolError};
 use prost::Message;
+use std::convert::TryInto;
 
 pub type SignedPreKeyId = u32;
 
 #[derive(Debug, Clone)]
 pub struct SignedPreKeyRecord {
     signed_pre_key: SignedPreKeyRecordStructure,
+    id: SignedPreKeyId,
+    timestamp: u64,
+    key_pair: KeyPair,
+    signature: [u8; SIGNATURE_LENGTH],
 }
 
 impl SignedPreKeyRecord {
-    pub fn new(id: SignedPreKeyId, timestamp: u64, key: &KeyPair, signature: &[u8]) -> Self {
-        let public_key = key.public_key.serialize().to_vec();
-        let private_key = key.private_key.serialize().to_vec();
-        let signature = signature.to_vec();
-        Self {
+    pub fn new(
+        id: SignedPreKeyId,
+        timestamp: u64,
+        key: &KeyPair,
+        signature: &[u8],
+    ) -> Result<Self> {
+        let signature: &[u8; SIGNATURE_LENGTH] =
+            &signature.to_vec().try_into().map_err(|e: Vec<u8>| {
+                SignalProtocolError::BadKeyLength(
+                    KeyType::Curve25519,
+                    AsymmetricRole::Signature,
+                    e.len(),
+                )
+            })?;
+        Ok(Self {
             signed_pre_key: SignedPreKeyRecordStructure {
                 id,
                 timestamp,
-                public_key,
-                private_key,
-                signature,
+                public_key: key.public_key.serialize().to_vec(),
+                private_key: key.private_key.serialize().to_vec(),
+                signature: signature.to_vec(),
             },
-        }
-    }
-
-    pub fn deserialize(data: &[u8]) -> Result<Self> {
-        Ok(Self {
-            signed_pre_key: SignedPreKeyRecordStructure::decode(data)?,
+            id,
+            timestamp,
+            key_pair: *key,
+            signature: *signature,
         })
     }
 
-    pub fn id(&self) -> Result<SignedPreKeyId> {
-        Ok(self.signed_pre_key.id)
+    pub fn deserialize(data: &[u8]) -> Result<Self> {
+        let record = SignedPreKeyRecordStructure::decode(data)?;
+        let SignedPreKeyRecordStructure {
+            id,
+            timestamp,
+            public_key,
+            private_key,
+            signature,
+        } = record.clone();
+        let public_key = PublicKey::deserialize_result(&public_key)?;
+        let private_key = PrivateKey::deserialize_result(&private_key)?;
+        let signature: &[u8; SIGNATURE_LENGTH] = &signature.try_into().map_err(|e: Vec<u8>| {
+            SignalProtocolError::BadKeyLength(
+                KeyType::Curve25519,
+                AsymmetricRole::Signature,
+                e.len(),
+            )
+        })?;
+        Ok(Self {
+            signed_pre_key: record,
+            id,
+            timestamp,
+            key_pair: KeyPair::new(public_key, private_key),
+            signature: *signature,
+        })
     }
 
-    pub fn timestamp(&self) -> Result<u64> {
-        Ok(self.signed_pre_key.timestamp)
+    pub fn id(&self) -> SignedPreKeyId {
+        self.id
     }
 
-    pub fn signature(&self) -> Result<Vec<u8>> {
-        Ok(self.signed_pre_key.signature.clone())
+    pub fn timestamp(&self) -> u64 {
+        self.timestamp
     }
 
-    pub fn public_key(&self) -> Result<PublicKey> {
-        PublicKey::deserialize(&self.signed_pre_key.public_key)
+    pub fn signature(&self) -> [u8; SIGNATURE_LENGTH] {
+        self.signature
     }
 
-    pub fn private_key(&self) -> Result<PrivateKey> {
-        PrivateKey::deserialize(&self.signed_pre_key.private_key)
+    pub fn public_key(&self) -> PublicKey {
+        self.key_pair.public_key
     }
 
-    pub fn key_pair(&self) -> Result<KeyPair> {
-        KeyPair::from_public_and_private(
-            &self.signed_pre_key.public_key,
-            &self.signed_pre_key.private_key,
-        )
+    pub fn private_key(&self) -> PrivateKey {
+        self.key_pair.private_key
+    }
+
+    pub fn key_pair(&self) -> KeyPair {
+        self.key_pair
     }
 
     pub fn serialize(&self) -> Result<Vec<u8>> {

@@ -510,7 +510,7 @@ impl IdentityKeyStore for NodeIdentityKeyStore {
             .await
             .map_err(|s| js_error_to_rust("getIdentityPrivateKey", s))?;
 
-        IdentityKeyPair::try_from(pk)
+        Ok(IdentityKeyPair::from(pk))
     }
 
     async fn get_local_registration_id(

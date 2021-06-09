@@ -29,7 +29,9 @@ fn update_ctr(ctr: &mut [u8; PAD_SIZE], init_ctr: u32) {
 }
 
 impl Aes256Ctr32 {
-    pub const NONCE_SIZE: usize = AES_BLOCK_SIZE - 4;
+    pub const CTR_NONCE_SIZE: usize = AES_BLOCK_SIZE - 4;
+
+    const NONCE_SIZE: usize = Self::CTR_NONCE_SIZE;
 
     pub fn new(aes256: Aes256, nonce: &[u8], init_ctr: u32) -> Result<Self> {
         if nonce.len() != Self::NONCE_SIZE {

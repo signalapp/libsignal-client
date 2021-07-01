@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 
-#[cfg(target_arch = "aarch64")]
+#[cfg(all(target_arch = "aarch64", feature = "nightly"))]
 mod aarch64;
 
 use crate::error::{Error, Result};
@@ -17,7 +17,7 @@ pub enum Aes256 {
     Soft(aes_soft::Aes256),
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     AesNi(aesni::Aes256),
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(all(target_arch = "aarch64", feature = "nightly"))]
     Aarch64(aarch64::Aes256Aarch64),
 }
 
@@ -27,7 +27,7 @@ impl Aes256 {
             return Err(Error::InvalidKeySize);
         }
 
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(all(target_arch = "aarch64", feature = "nightly"))]
         {
             if crate::cpuid::has_armv8_crypto() {
                 unsafe {
@@ -85,7 +85,7 @@ impl Aes256 {
             Aes256::Soft(aes) => trait_encrypt(aes, buf),
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             Aes256::AesNi(aes) => trait_encrypt(aes, buf),
-            #[cfg(target_arch = "aarch64")]
+            #[cfg(all(target_arch = "aarch64", feature = "nightly"))]
             Aes256::Aarch64(aes) => unsafe { aes.encrypt(buf) },
         }
     }

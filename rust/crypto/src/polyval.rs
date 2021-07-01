@@ -10,7 +10,7 @@ mod polyval_soft;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod polyval_clmul;
 
-#[cfg(target_arch = "aarch64")]
+#[cfg(all(target_arch = "aarch64", feature = "nightly"))]
 mod polyval_pmul;
 
 #[derive(Clone)]
@@ -18,7 +18,7 @@ pub enum Polyval {
     Soft(polyval_soft::PolyvalSoft),
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     Clmul(polyval_clmul::PolyvalClmul),
-    #[cfg(target_arch = "aarch64")]
+    #[cfg(all(target_arch = "aarch64", feature = "nightly"))]
     Pmul(polyval_pmul::PolyvalPmul),
 }
 
@@ -35,7 +35,7 @@ impl Polyval {
             }
         }
 
-        #[cfg(target_arch = "aarch64")]
+        #[cfg(all(target_arch = "aarch64", feature = "nightly"))]
         {
             if crate::cpuid::has_armv8_crypto() {
                 return Ok(Polyval::Pmul(polyval_pmul::PolyvalPmul::new(key)?));
@@ -54,7 +54,7 @@ impl Polyval {
             Polyval::Soft(polyval) => polyval.update(data),
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             Polyval::Clmul(polyval) => polyval.update(data),
-            #[cfg(target_arch = "aarch64")]
+            #[cfg(all(target_arch = "aarch64", feature = "nightly"))]
             Polyval::Pmul(polyval) => polyval.update(data),
         }
     }
@@ -64,7 +64,7 @@ impl Polyval {
             Polyval::Soft(polyval) => polyval.update_padded(data),
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             Polyval::Clmul(polyval) => polyval.update_padded(data),
-            #[cfg(target_arch = "aarch64")]
+            #[cfg(all(target_arch = "aarch64", feature = "nightly"))]
             Polyval::Pmul(polyval) => polyval.update_padded(data),
         }
     }
@@ -74,7 +74,7 @@ impl Polyval {
             Polyval::Soft(polyval) => polyval.finalize(),
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             Polyval::Clmul(polyval) => polyval.finalize(),
-            #[cfg(target_arch = "aarch64")]
+            #[cfg(all(target_arch = "aarch64", feature = "nightly"))]
             Polyval::Pmul(polyval) => polyval.finalize(),
         }
     }

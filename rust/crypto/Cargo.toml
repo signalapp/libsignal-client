@@ -20,6 +20,9 @@ rand = "0.7.3"
 sha-1 = "0.9"
 sha2 = "0.9"
 
+[features]
+nightly = []
+
 [target.'cfg(all(target_arch = "aarch64", any(target_os = "linux")))'.dependencies]
 libc = "0.2.93" # for getauxval
 

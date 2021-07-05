@@ -47,7 +47,7 @@ use error::Result;
 pub use {
     address::{DeviceId, ProtocolAddress},
     curve::{KeyPair, PrivateKey, PublicKey},
-    error::SignalProtocolError,
+    error::{CallbackErrorWrapper, SignalProtocolError},
     fingerprint::{DisplayableFingerprint, Fingerprint, ScannableFingerprint},
     group_cipher::{
         create_sender_key_distribution_message, group_decrypt, group_encrypt,

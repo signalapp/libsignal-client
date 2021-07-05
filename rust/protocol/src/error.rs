@@ -5,186 +5,120 @@
 
 use crate::curve::KeyType;
 
-use std::error::Error;
+use displaydoc::Display;
+use thiserror::Error;
+
 use std::fmt;
 use std::panic::UnwindSafe;
 
 pub type Result<T> = std::result::Result<T, SignalProtocolError>;
 
+/// Wraps a boxed error struct and delegates the [std::error::Error] trait to it.
+///
+/// A [Box] wrapping an error apparently does not implement [std::error::Error] itself, which breaks
+/// the `#[source]` annotation from the [thiserror::Error] derive macro that requires its target to
+/// quack like an error. So we have to create this wrapper struct to do that ourselves in order to
+/// nicely write `#[derive(Debug, Error)]` in the declaration of [SignalProtocolError].
 #[derive(Debug)]
+pub struct CallbackErrorWrapper(
+    pub Box<dyn std::error::Error + Send + Sync + UnwindSafe + 'static>,
+);
+
+impl fmt::Display for CallbackErrorWrapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl std::error::Error for CallbackErrorWrapper {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self.0.as_ref())
+    }
+}
+
+#[derive(Debug, Display, Error)]
 pub enum SignalProtocolError {
+    /// invalid argument: {0}
     InvalidArgument(String),
+    /// invalid state for call to {0} to succeed: {1}
     InvalidState(&'static str, String),
 
-    ProtobufDecodingError(prost::DecodeError),
-    ProtobufEncodingError(prost::EncodeError),
+    /// failed to decode protobuf: {0}
+    ProtobufDecodingError(#[from] prost::DecodeError),
+    /// failed to encode protobuf: {0}
+    ProtobufEncodingError(#[from] prost::EncodeError),
+    /// protobuf encoding was invalid
     InvalidProtobufEncoding,
 
+    /// ciphertext serialized bytes were too short <{0}>
     CiphertextMessageTooShort(usize),
+    /// ciphertext version was too old <{0}>
     LegacyCiphertextVersion(u8),
+    /// ciphertext version was unrecognized <{0}>
     UnrecognizedCiphertextVersion(u8),
+    /// unrecognized message version <{0}>
     UnrecognizedMessageVersion(u32),
 
+    /// fingerprint identifiers do not match
     FingerprintIdentifierMismatch,
+    /// fingerprint version number mismatch them {0} us {1}
     FingerprintVersionMismatch(u32, u32),
+    /// fingerprint parsing error
     FingerprintParsingError,
 
+    /// no key type identifier
     NoKeyTypeIdentifier,
+    /// bad key type <{0:#04x}>
     BadKeyType(u8),
+    /// bad key length <{0}> for key with type <{1}>
     BadKeyLength(KeyType, usize),
 
+    /// invalid signature detected
     SignatureValidationFailed,
 
+    /// untrusted identity for address {0}
     UntrustedIdentity(crate::ProtocolAddress),
 
+    /// invalid prekey identifier
     InvalidPreKeyId,
+    /// invalid signed prekey identifier
     InvalidSignedPreKeyId,
 
+    /// invalid root key length <{0}>
     InvalidRootKeyLength(usize),
+    /// invalid chain key length <{0}>
     InvalidChainKeyLength(usize),
 
+    /// invalid MAC key length <{0}>
     InvalidMacKeyLength(usize),
+    /// invalid cipher key length <{0}> or nonce length <{1}>
     InvalidCipherCryptographicParameters(usize, usize),
+    /// invalid ciphertext message
     InvalidCiphertext,
 
+    /// no sender key state
     NoSenderKeyState,
 
+    /// session with '{0}' not found
     SessionNotFound(String),
+    /// invalid session structure
     InvalidSessionStructure,
 
+    /// message with old counter {0} / {1}
     DuplicatedMessage(u32, u32),
+    /// invalid message {0}
     InvalidMessage(&'static str),
+    /// internal error {0}
     InternalError(&'static str),
+    /// error while invoking an ffi callback: {0}
     FfiBindingError(String),
-    ApplicationCallbackError(
-        &'static str,
-        Box<dyn Error + Send + Sync + UnwindSafe + 'static>,
-    ),
+    /// error in method call '{0}': {1}
+    ApplicationCallbackError(&'static str, #[source] CallbackErrorWrapper),
 
+    /// invalid sealed sender message {0}
     InvalidSealedSenderMessage(String),
+    /// unknown sealed sender message version {0}
     UnknownSealedSenderVersion(u8),
+    /// self send of a sealed sender message
     SealedSenderSelfSend,
-}
-
-impl Error for SignalProtocolError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            SignalProtocolError::ProtobufEncodingError(e) => Some(e),
-            SignalProtocolError::ProtobufDecodingError(e) => Some(e),
-            SignalProtocolError::ApplicationCallbackError(_, e) => Some(e.as_ref()),
-            _ => None,
-        }
-    }
-}
-
-impl From<prost::DecodeError> for SignalProtocolError {
-    fn from(value: prost::DecodeError) -> SignalProtocolError {
-        SignalProtocolError::ProtobufDecodingError(value)
-    }
-}
-
-impl From<prost::EncodeError> for SignalProtocolError {
-    fn from(value: prost::EncodeError) -> SignalProtocolError {
-        SignalProtocolError::ProtobufEncodingError(value)
-    }
-}
-
-impl fmt::Display for SignalProtocolError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            SignalProtocolError::ProtobufDecodingError(e) => {
-                write!(f, "failed to decode protobuf: {}", e)
-            }
-            SignalProtocolError::ProtobufEncodingError(e) => {
-                write!(f, "failed to encode protobuf: {}", e)
-            }
-            SignalProtocolError::InvalidProtobufEncoding => {
-                write!(f, "protobuf encoding was invalid")
-            }
-            SignalProtocolError::InvalidArgument(s) => write!(f, "invalid argument: {}", s),
-            SignalProtocolError::InvalidState(func, s) => {
-                write!(f, "invalid state for call to {} to succeed: {}", func, s)
-            }
-            SignalProtocolError::CiphertextMessageTooShort(size) => {
-                write!(f, "ciphertext serialized bytes were too short <{}>", size)
-            }
-            SignalProtocolError::LegacyCiphertextVersion(version) => {
-                write!(f, "ciphertext version was too old <{}>", version)
-            }
-            SignalProtocolError::UnrecognizedCiphertextVersion(version) => {
-                write!(f, "ciphertext version was unrecognized <{}>", version)
-            }
-            SignalProtocolError::UnrecognizedMessageVersion(message_version) => {
-                write!(f, "unrecognized message version <{}>", message_version)
-            }
-            SignalProtocolError::FingerprintIdentifierMismatch => {
-                write!(f, "fingerprint identifiers do not match")
-            }
-            SignalProtocolError::FingerprintVersionMismatch(theirs, ours) => {
-                write!(
-                    f,
-                    "fingerprint version number mismatch them {} us {}",
-                    theirs, ours
-                )
-            }
-            SignalProtocolError::FingerprintParsingError => {
-                write!(f, "fingerprint parsing error")
-            }
-            SignalProtocolError::NoKeyTypeIdentifier => write!(f, "no key type identifier"),
-            SignalProtocolError::BadKeyType(t) => write!(f, "bad key type <{:#04x}>", t),
-            SignalProtocolError::BadKeyLength(t, l) => {
-                write!(f, "bad key length <{}> for key with type <{}>", l, t)
-            }
-            SignalProtocolError::InvalidPreKeyId => write!(f, "invalid prekey identifier"),
-            SignalProtocolError::InvalidSignedPreKeyId => {
-                write!(f, "invalid signed prekey identifier")
-            }
-            SignalProtocolError::InvalidChainKeyLength(l) => {
-                write!(f, "invalid chain key length <{}>", l)
-            }
-            SignalProtocolError::InvalidRootKeyLength(l) => {
-                write!(f, "invalid root key length <{}>", l)
-            }
-            SignalProtocolError::InvalidCipherCryptographicParameters(kl, nl) => write!(
-                f,
-                "invalid cipher key length <{}> or nonce length <{}>",
-                kl, nl
-            ),
-            SignalProtocolError::InvalidMacKeyLength(l) => {
-                write!(f, "invalid MAC key length <{}>", l)
-            }
-            SignalProtocolError::UntrustedIdentity(addr) => {
-                write!(f, "untrusted identity for address {}", addr)
-            }
-            SignalProtocolError::SignatureValidationFailed => {
-                write!(f, "invalid signature detected")
-            }
-            SignalProtocolError::InvalidCiphertext => write!(f, "invalid ciphertext message"),
-            SignalProtocolError::SessionNotFound(who) => {
-                write!(f, "session with '{}' not found", who)
-            }
-            SignalProtocolError::InvalidSessionStructure => write!(f, "invalid session structure"),
-            SignalProtocolError::DuplicatedMessage(i, c) => {
-                write!(f, "message with old counter {} / {}", i, c)
-            }
-            SignalProtocolError::InvalidMessage(m) => write!(f, "invalid message {}", m),
-            SignalProtocolError::InternalError(m) => write!(f, "internal error {}", m),
-            SignalProtocolError::NoSenderKeyState => write!(f, "no sender key state"),
-            SignalProtocolError::FfiBindingError(m) => {
-                write!(f, "error while invoking an ffi callback: {}", m)
-            }
-            SignalProtocolError::ApplicationCallbackError(func, c) => {
-                write!(f, "application callback {} failed with {}", func, c)
-            }
-            SignalProtocolError::InvalidSealedSenderMessage(m) => {
-                write!(f, "invalid sealed sender message {}", m)
-            }
-            SignalProtocolError::UnknownSealedSenderVersion(v) => {
-                write!(f, "unknown sealed sender message version {}", v)
-            }
-            SignalProtocolError::SealedSenderSelfSend => {
-                write!(f, "self send of a sealed sender message")
-            }
-        }
-    }
 }

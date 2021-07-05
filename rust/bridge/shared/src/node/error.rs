@@ -174,5 +174,8 @@ impl std::error::Error for CallbackError {}
 
 /// Converts a JavaScript error message to a [`SignalProtocolError::ApplicationCallbackError`].
 pub fn js_error_to_rust(func: &'static str, err: String) -> SignalProtocolError {
-    SignalProtocolError::ApplicationCallbackError(func, Box::new(CallbackError::new(err)))
+    SignalProtocolError::ApplicationCallbackError(
+        func,
+        CallbackErrorWrapper(Box::new(CallbackError::new(err))),
+    )
 }
